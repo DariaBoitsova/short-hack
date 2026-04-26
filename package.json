@@ -1,0 +1,17 @@
+{
+  "name": "hr-x5-ai-recruiting",
+  "version": "1.0.0",
+  "description": "Лендинг AI-рекрутинг X5 + VK-бот (GigaChat) + админка",
+  "type": "module",
+  "main": "bot/server.js",
+  "scripts": {
+    "bot": "node bot/server.js",
+    "start": "node bot/server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "vk-io": "^4.9.1"
+  }
+}

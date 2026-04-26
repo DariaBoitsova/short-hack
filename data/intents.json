@@ -1,0 +1,20 @@
+{
+  "5e3432d5-d4bb-4b07-861f-7ed370d25209": {
+    "intentId": "5e3432d5-d4bb-4b07-861f-7ed370d25209",
+    "fio": "АУДАУ УЦАУЦА ЦУА",
+    "phone": "79161062732",
+    "vacancyId": "intern_ds",
+    "vacancyTitle": "Data Science (стажировка)",
+    "category": "internship",
+    "savedAt": "2026-04-26T11:16:13.458Z"
+  },
+  "de16b6a6-c822-4b55-a91d-b429efba3f45": {
+    "intentId": "de16b6a6-c822-4b55-a91d-b429efba3f45",
+    "fio": "лаудкуц",
+    "phone": "84372598",
+    "vacancyId": "intern_cib",
+    "vacancyTitle": "CIB (стажировка)",
+    "category": "internship",
+    "savedAt": "2026-04-26T11:22:53.246Z"
+  }
+}

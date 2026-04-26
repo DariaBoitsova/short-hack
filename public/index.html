@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR-Flow AI — X5 Group</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+:root {
+  --mint: #E2F3E5; --lilac: #F3E2F5; --canvas: #F9FAFB;
+  --graphite: #2D3436; --sunny: #FFF4A3; --mint-dark: #c8e6cd;
+  --x5: #007934; --x5-dark: #00632a; --x5-deep: #004a1f;
+  --x5-light: #e8f5ee;
+}
+/* Фон: пастельный mesh, как на референсе */
+body { font-family:'Geologica',sans-serif; color:var(--graphite); scroll-behavior:smooth; overflow-x:hidden;
+  background-color:#fafafa;
+  background-image:
+    radial-gradient(ellipse 85% 65% at 5% 8%, rgba(186, 235, 210, 0.55) 0%, transparent 58%),
+    radial-gradient(ellipse 75% 60% at 4% 92%, rgba(165, 225, 238, 0.48) 0%, transparent 52%),
+    radial-gradient(ellipse 70% 58% at 96% 6%, rgba(220, 205, 245, 0.52) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 55% at 97% 94%, rgba(255, 244, 200, 0.5) 0%, transparent 54%),
+    radial-gradient(ellipse 55% 75% at 50% 45%, rgba(255, 255, 255, 0.92) 0%, rgba(252, 252, 252, 1) 72%);
+  background-attachment:fixed;
+}
+.bg-watercolor { display:none; }
+.rounded-soft { border-radius:40px; }
+.rounded-card { border-radius:32px; }
+.glass-card { background:rgba(255,255,255,0.5); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.6); }
+.btn-main { background-color:var(--x5); color:white; transition:all 0.2s cubic-bezier(0.4,0,0.2,1); }
+.btn-main:hover { background-color:var(--x5-dark); transform:translateY(-2px); box-shadow:0 10px 25px rgba(0,121,52,0.2); }
+.input-field { transition:all 0.3s ease; border:2px solid transparent; }
+.input-field:focus { border-color:var(--x5); background:white; outline:none; }
+.fade-in { opacity:0; transform:translateY(30px); transition:all 0.8s ease-out; }
+.fade-in.visible { opacity:1; transform:translateY(0); }
+.tag-pill { display:inline-block; padding:12px 28px; border:2px solid var(--x5); border-radius:100px; font-weight:700; font-size:14px; color:var(--x5); transition:all 0.3s cubic-bezier(0.4,0,0.2,1); background:rgba(255,255,255,0.6); cursor:pointer; white-space:nowrap; }
+.tag-pill:hover { background:var(--x5); color:white; transform:translateY(-3px) scale(1.05); box-shadow:0 8px 20px rgba(0,121,52,0.15); }
+
+/* ====== QUIZ MODAL ====== */
+#quiz-overlay { position:fixed; inset:0; z-index:1000; background:rgba(10,10,10,0.65); backdrop-filter:blur(14px); display:flex; align-items:center; justify-content:center; padding:16px; opacity:0; pointer-events:none; transition:opacity 0.4s ease; }
+#quiz-overlay.open { opacity:1; pointer-events:all; }
+#quiz-modal { background:rgba(255,255,255,0.97); border-radius:40px; width:100%; max-width:720px; max-height:90vh; overflow-y:auto; padding:44px; position:relative; transform:translateY(30px) scale(0.97); transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1); border:1px solid rgba(255,255,255,0.9); box-shadow:0 40px 80px rgba(0,0,0,0.2); }
+#quiz-overlay.open #quiz-modal { transform:translateY(0) scale(1); }
+.quiz-step { display:none; animation:stepIn 0.4s cubic-bezier(0.34,1.3,0.64,1) forwards; }
+.quiz-step.active { display:block; }
+@keyframes stepIn { from{opacity:0;transform:translateX(28px)} to{opacity:1;transform:translateX(0)} }
+.prog-bg { background:#f0f0f0; border-radius:100px; height:5px; overflow:hidden; }
+.prog-fill { height:100%; background:linear-gradient(90deg,#00a846,var(--x5)); border-radius:100px; transition:width 0.5s cubic-bezier(0.4,0,0.2,1); }
+.dir-card { border:2px solid #e5e7eb; border-radius:22px; padding:18px; cursor:pointer; transition:all 0.25s ease; background:white; text-align:left; position:relative; overflow:hidden; }
+.dir-card:hover { border-color:#86efac; background:#f0fdf4; transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,0.06); }
+.dir-card.selected { border-color:var(--x5); background:#f0fdf4; box-shadow:0 0 0 3px rgba(0,121,52,0.12); }
+.dir-card .chk { position:absolute; top:10px; right:10px; width:20px; height:20px; background:var(--x5); border-radius:50%; display:none; align-items:center; justify-content:center; }
+.dir-card.selected .chk { display:flex; }
+.dir-icon { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:9px; font-size:18px; }
+.dir-title { font-weight:800; font-size:12px; line-height:1.3; color:#1a1a1a; }
+.dir-tag { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-top:5px; }
+.qlabel { display:block; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.12em; color:#9ca3af; margin-bottom:8px; }
+.qinput { width:100%; padding:14px 18px; border:2px solid #e5e7eb; border-radius:16px; font-family:'Geologica',sans-serif; font-size:14px; font-weight:600; color:var(--graphite); background:white; transition:border-color 0.25s,box-shadow 0.25s; outline:none; }
+.qinput:focus { border-color:#86efac; box-shadow:0 0 0 3px rgba(0,121,52,0.08); }
+.opt-btn { width:100%; padding:14px 18px; border:2px solid #e5e7eb; border-radius:16px; background:white; font-family:'Geologica',sans-serif; font-weight:700; font-size:13px; color:var(--graphite); cursor:pointer; text-align:left; transition:all 0.2s ease; display:flex; align-items:center; gap:10px; }
+.opt-btn:hover { border-color:#86efac; background:#f0fdf4; transform:translateX(3px); }
+.opt-btn.selected { border-color:var(--x5); background:#f0fdf4; }
+.opt-icon { width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+.qnext { background:var(--x5); color:white; font-family:'Geologica',sans-serif; font-weight:900; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; border:none; border-radius:100px; padding:14px 32px; cursor:pointer; transition:all 0.2s ease; }
+.qnext:hover { background:var(--x5-dark); transform:translateY(-1px); box-shadow:0 8px 20px rgba(0,121,52,0.25); }
+.qnext:disabled { opacity:0.35; cursor:not-allowed; transform:none; }
+.qback { background:none; border:2px solid #e5e7eb; border-radius:100px; padding:12px 24px; font-family:'Geologica',sans-serif; font-weight:700; font-size:12px; color:#9ca3af; cursor:pointer; transition:all 0.2s; }
+.qback:hover { border-color:#d1d5db; color:#6b7280; }
+.edu-opts { display:flex; flex-wrap:wrap; gap:8px; }
+.edu-btn { padding:9px 18px; border:2px solid #e5e7eb; border-radius:100px; font-family:'Geologica',sans-serif; font-weight:700; font-size:12px; color:#6b7280; cursor:pointer; background:white; transition:all 0.2s; }
+.edu-btn:hover { border-color:#86efac; color:#059669; }
+.edu-btn.selected { border-color:var(--x5); background:#f0fdf4; color:var(--x5); }
+.file-drop { border:2px dashed #d1d5db; border-radius:16px; padding:24px; text-align:center; cursor:pointer; transition:all 0.2s; background:#fafafa; position:relative; }
+.file-drop:hover,.file-drop.drag-over { border-color:#86efac; background:#f0fdf4; }
+.file-drop input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.close-btn { position:absolute; top:18px; right:20px; width:36px; height:36px; border-radius:50%; border:2px solid #e5e7eb; background:white; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; font-size:16px; color:#9ca3af; }
+.close-btn:hover { background:#f5f5f5; color:var(--graphite); }
+#quiz-modal::-webkit-scrollbar { width:5px; }
+#quiz-modal::-webkit-scrollbar-thumb { background:#e5e7eb; border-radius:3px; }
+
+/* Лоадер перед переходом в VK */
+#vk-loader { position:fixed; inset:0; z-index:3000; background:rgba(255,255,255,0.92); display:none; align-items:center; justify-content:center; flex-direction:column; gap:16px; }
+#vk-loader.open { display:flex; }
+.spinner { width:48px; height:48px; border:4px solid #e5e7eb; border-top-color:var(--x5); border-radius:50%; animation:spin 0.9s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ====== ADMIN PANEL ====== */
+#admin-overlay { position:fixed; inset:0; z-index:2000; display:none; }
+#admin-overlay.open { display:flex; }
+.admin-sidebar { width:260px; background:var(--x5-deep); flex-shrink:0; display:flex; flex-direction:column; overflow-y:auto; }
+.admin-main { flex:1; background:#f4f6f5; overflow-y:auto; display:flex; flex-direction:column; }
+.vac-item { padding:12px 20px; cursor:pointer; transition:all 0.2s; border-left:3px solid transparent; display:flex; align-items:center; justify-content:space-between; }
+.vac-item:hover { background:rgba(255,255,255,0.07); border-left-color:rgba(255,255,255,0.3); }
+.vac-item.active { background:rgba(255,255,255,0.12); border-left-color:#4ade80; }
+.vac-name { font-size:12px; font-weight:700; color:rgba(255,255,255,0.85); line-height:1.3; }
+.vac-count { font-size:10px; font-weight:800; background:rgba(255,255,255,0.12); color:#86efac; padding:3px 8px; border-radius:100px; flex-shrink:0; }
+.score-bar-bg { background:#e5e7eb; border-radius:100px; height:5px; overflow:hidden; }
+.score-bar-fill { height:100%; border-radius:100px; transition:width 0.8s cubic-bezier(0.4,0,0.2,1); }
+.tag-kw { display:inline-block; padding:4px 10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:100px; font-size:10px; font-weight:700; color:var(--x5); white-space:nowrap; margin:2px; }
+.admin-search { width:100%; padding:10px 16px; border:1.5px solid #e5e7eb; border-radius:12px; font-family:'Geologica',sans-serif; font-size:13px; font-weight:600; color:var(--graphite); outline:none; background:white; }
+.filter-select { padding:9px 14px; border:1.5px solid #e5e7eb; border-radius:10px; font-family:'Geologica',sans-serif; font-size:12px; font-weight:700; color:var(--graphite); outline:none; background:white; cursor:pointer; }
+.stat-card { background:white; border-radius:16px; padding:16px 20px; border:1.5px solid #f0f0f0; }
+.polite-green { background:#dcfce7; color:#166534; padding:4px 10px; border-radius:100px; font-size:10px; font-weight:800; }
+.polite-red { background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:100px; font-size:10px; font-weight:800; }
+/* --- Макеты экранов 1–6 --- */
+:root { --ink:#0a0a0a; --muted:#4A4A4A; --accent-green:#22AD4C; --mint-cta:#D8F3E3; --mint-cta-text:#1A3C34; --lavender:#F3E8FF; --mint-card:#E8F5E9; }
+.landing-gradient { background:transparent; }
+.pill-intern { border:2px solid var(--ink); background:#fff; border-radius:999px; padding:14px 22px; font-weight:800; font-size:13px; cursor:pointer; transition:transform .2s, box-shadow .2s; color:var(--ink); }
+.pill-intern:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.08); }
+.pill-vac { border:2px solid var(--ink); color:var(--ink); background:#fff; border-radius:999px; padding:14px 22px; font-weight:800; font-size:13px; cursor:pointer; transition:all .2s; }
+.pill-vac:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.08); }
+.map-wrap { position:relative; border-radius:40px; min-height:420px; background:#fff; border:2px solid rgba(255,255,255,.9); box-shadow:0 20px 60px rgba(0,0,0,.06); overflow:hidden; }
+#yandex-map { width:100%; height:420px; }
+.vac-floater { position:absolute; bottom:24px; right:24px; z-index:2; background:#fff; border-radius:24px; padding:18px 24px; box-shadow:0 16px 40px rgba(0,0,0,.12); pointer-events:none; }
+.card-ai { background:var(--lavender); border-radius:36px; padding:32px 28px; min-height:240px; }
+.card-rate { background:var(--mint-card); border-radius:36px; padding:32px 28px; min-height:240px; }
+.cta-pill { background:var(--mint-cta); color:var(--mint-cta-text); border:none; border-radius:999px; padding:18px 40px; font-weight:900; font-size:13px; letter-spacing:.06em; cursor:pointer; box-shadow:0 12px 32px rgba(26,60,52,.12); transition:transform .2s; }
+.cta-pill:hover { transform:translateY(-2px); }
+/* --- Кабинет рекрутёра (с 7-го экрана) --- */
+#recruiter-app { display:none; flex-direction:column; min-height:100vh; background:linear-gradient(180deg,#f7fdf9 0%,#fafafa 40%,#fff 100%); font-family:'Geologica',sans-serif; }
+#recruiter-app.open { display:flex; }
+.rec-top { display:flex; align-items:center; justify-content:space-between; padding:16px 28px; background:rgba(255,255,255,.92); border-bottom:1px solid #e8ece9; flex-wrap:wrap; gap:12px; }
+.rec-logo-bar { width:4px; height:36px; background:var(--x5); border-radius:2px; margin-right:10px; }
+.rec-nav { display:flex; gap:8px 20px; flex-wrap:wrap; align-items:center; }
+.rec-nav button { background:none; border:none; font-weight:900; font-size:11px; letter-spacing:.08em; color:#6b7280; cursor:pointer; padding:8px 4px; }
+.rec-nav button.active { color:var(--x5); border-bottom:2px solid var(--x5); }
+.rec-user { text-align:right; font-size:12px; }
+.rec-user span { color:var(--x5); font-weight:700; font-size:11px; }
+.score-cell { display:inline-flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; border-radius:14px; font-weight:900; font-size:13px; }
+.sc-soft { background:#ecfdf5; color:#059669; }
+.sc-hard { background:#eff6ff; color:#2563eb; }
+.sc-motiv { background:#fffbeb; color:#ca8a04; }
+.kanban-col { flex:1; min-width:220px; background:#f3f4f6; border-radius:24px; padding:16px; }
+.kanban-card { background:#fff; border-radius:16px; padding:14px; margin-bottom:10px; box-shadow:0 4px 14px rgba(0,0,0,.06); font-size:12px; font-weight:800; }
+#login-overlay { position:fixed; inset:0; z-index:4000; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; padding:16px; }
+#login-overlay.open { display:flex; }
+.login-box { background:#fff; border-radius:28px; padding:36px; max-width:400px; width:100%; box-shadow:0 30px 80px rgba(0,0,0,.2); }
+</style>
+</head>
+<body>
+
+<!-- Лоадер VK -->
+<div id="vk-loader">
+  <div class="spinner"></div>
+  <p style="font-weight:800;color:var(--x5);font-size:15px;">Подключаем ИИ-ассистента…</p>
+  <p style="font-size:12px;color:#9ca3af;">Переход в VK-бот X5</p>
+</div>
+
+<!-- Вход сотрудников -->
+<div id="login-overlay">
+  <div class="login-box">
+    <h3 style="font-size:22px;font-weight:900;margin-bottom:8px;">Вход для сотрудников</h3>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:20px;">Укажите корпоративную почту <strong>или</strong> телефон и пароль (настройки в CONFIG).</p>
+    <label class="qlabel">E-mail или телефон</label>
+    <input type="text" id="login-id" class="qinput" placeholder="name@company.ru или +7…" style="margin-bottom:12px;">
+    <label class="qlabel">Пароль</label>
+    <input type="password" id="login-pass" class="qinput" placeholder="Пароль" style="margin-bottom:14px;">
+    <p id="login-err" style="color:#dc2626;font-size:12px;display:none;margin-bottom:10px;">Неверные данные</p>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" class="qback" onclick="closeLogin()">Отмена</button>
+      <button type="button" class="qnext" onclick="submitLogin()">Войти</button>
+    </div>
+  </div>
+</div>
+
+<div id="landing-stack" class="landing-gradient">
+
+<!-- Верхняя панель -->
+<header class="max-w-6xl mx-auto px-5 pt-6 pb-2 flex flex-wrap items-center justify-between gap-4">
+  <div class="flex items-center gap-2">
+    <span class="text-lg font-black tracking-tight">HR-Flow <span style="color:var(--x5)">AI</span></span>
+    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest hidden sm:inline">X5 Group</span>
+  </div>
+  <button type="button" class="text-sm font-bold underline decoration-2 underline-offset-4" style="color:var(--x5)" onclick="openLogin()">Вход для сотрудников</button>
+</header>
+
+<!-- Экран 1: Hero -->
+<section class="max-w-3xl mx-auto px-5 pt-10 pb-16 text-center">
+  <h1 class="text-4xl sm:text-5xl md:text-6xl font-black leading-tight tracking-tight">
+    <span style="color:var(--ink)">Твоя карьера</span><br>
+    <span style="color:var(--accent-green)">в один клик</span>
+  </h1>
+  <p class="mt-6 text-base sm:text-lg font-medium max-w-xl mx-auto" style="color:var(--muted)">
+    ИИ-платформа нового поколения: проходишь игру, получаешь оффер.<br>
+    <strong>Без бесконечных звонков и ожиданий.</strong>
+  </p>
+  <button type="button" class="btn-main px-10 py-4 rounded-full font-black text-sm shadow-xl mt-10" onclick="openQuiz()">Откликнуться</button>
+</section>
+
+<!-- Экран 2: Карта + счётчик -->
+<section class="max-w-6xl mx-auto px-5 pb-20">
+  <h2 class="text-2xl sm:text-3xl font-black" style="color:var(--ink)">Где ты хочешь работать?</h2>
+  <p class="mt-2 text-sm font-medium" style="color:#9ca3af">ИИ анализирует доступные вакансии в режиме реального времени</p>
+  <div class="map-wrap mt-8">
+    <div id="yandex-map"></div>
+    <div class="vac-floater">
+      <p class="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 mb-1">Доступно вакансий</p>
+      <p class="text-4xl font-black" style="color:var(--accent-green)">142</p>
+    </div>
+  </div>
+  <p class="text-xs text-gray-500 mt-3 max-w-2xl">На карте — демо-точки магазинов и офисов сети (замените координаты на реальные). Нужен ключ <a href="https://developer.tech.yandex.ru/" class="underline" target="_blank" rel="noopener">JavaScript API Карт</a>.</p>
+</section>
+
+<!-- Экран 3: Стажировки (пилюли) -->
+<section class="max-w-6xl mx-auto px-5 pb-20">
+  <h2 class="text-2xl sm:text-3xl font-black text-center" style="color:var(--ink)">Направления стажировок</h2>
+  <p class="text-center mt-2 text-sm italic" style="color:#9ca3af">Для тех, кто только начинает свой путь</p>
+  <div class="flex flex-wrap justify-center gap-3 mt-10" id="landing-pills-intern"></div>
+</section>
+
+<!-- Экран 4: Вакансии -->
+<section class="max-w-6xl mx-auto px-5 pb-20">
+  <h2 class="text-2xl sm:text-3xl font-black text-center" style="color:var(--ink)">Основные вакансии <span style="color:var(--x5)">X5 Group</span></h2>
+  <p class="text-center mt-2 text-sm" style="color:var(--muted)">Работа в крупнейшем ритейле страны</p>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-10 max-w-3xl mx-auto" id="landing-pills-vac"></div>
+</section>
+
+<!-- Экран 5: ИИ + рейтинг -->
+<section class="max-w-6xl mx-auto px-5 pb-20">
+  <div class="grid md:grid-cols-2 gap-6">
+    <div class="card-ai">
+      <h3 class="text-xl font-black text-purple-900">ИИ-Скрининг 2.0</h3>
+      <p class="mt-3 text-sm font-medium text-purple-900/80 leading-relaxed">Наша нейросеть анализирует не только текущий опыт, но и твой скрытый потенциал роста в компании.</p>
+      <div class="mt-6 inline-flex items-center gap-2 bg-white/90 rounded-full px-4 py-2 text-xs font-bold text-gray-700">
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> 5284 активных сессий
+      </div>
+    </div>
+    <div class="card-rate">
+      <h3 class="text-sm font-black uppercase tracking-widest" style="color:var(--x5-deep)">Рейтинг</h3>
+      <p class="text-2xl mt-3">⭐⭐⭐⭐⭐</p>
+      <p class="mt-3 text-sm font-bold" style="color:var(--x5-deep)">98% кандидатов рекомендуют нас друзьям</p>
+    </div>
+  </div>
+</section>
+
+<!-- Экран 6: CTA + футер -->
+<section class="max-w-6xl mx-auto px-5 pb-24 text-center">
+  <button type="button" class="cta-pill" onclick="openQuiz()">Начать расчёт рейтинга</button>
+  <div class="mt-16 grid sm:grid-cols-2 gap-10 text-left max-w-3xl mx-auto">
+    <div>
+      <p class="font-black text-lg">HR-FLOW AI</p>
+      <p class="text-sm mt-2" style="color:var(--muted)">Интеллектуальная среда для поиска талантов X5 Group.</p>
+    </div>
+    <div>
+      <p class="font-black text-lg">Контакты</p>
+      <p class="text-sm mt-2" style="color:var(--muted)">8 800 555-35-35<br>support@hrflow-ai.ru</p>
+    </div>
+  </div>
+</section>
+
+</div><!-- /landing-stack -->
+
+<!-- QUIZ -->
+<div id="quiz-overlay">
+  <div id="quiz-modal">
+    <button type="button" class="close-btn" onclick="closeQuiz()">✕</button>
+    <div style="margin-bottom:28px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">
+        <span id="step-label" style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:#9ca3af;">Шаг 1</span>
+        <span id="step-pct" style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:var(--x5);">0%</span>
+      </div>
+      <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:5%;"></div></div>
+    </div>
+
+    <!-- Шаг 1: 18 направлений -->
+    <div class="quiz-step active" id="s1">
+      <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.03em;margin-bottom:5px;">Выбери направление</h2>
+      <p style="color:#9ca3af;font-size:13px;margin-bottom:18px;">ИИ-бот подберёт вопросы под твой трек</p>
+      <p style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:var(--x5);margin-bottom:10px;">Стажировки</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;" id="dir-grid-intern"></div>
+      <p style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:#9333ea;margin-bottom:10px;">Вакансии</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:28px;" id="dir-grid-vac"></div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button type="button" class="qnext" id="qn1" disabled onclick="goStep(2)">Продолжить</button>
+      </div>
+    </div>
+
+    <!-- Шаг 2: ФИО + контакты -->
+    <div class="quiz-step" id="s2">
+      <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.03em;margin-bottom:5px;">Общие данные</h2>
+      <p style="color:#9ca3af;font-size:13px;margin-bottom:24px;">После отправки откроется чат с VK-ботом — интервью продолжится там</p>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px;">
+        <div>
+          <label class="qlabel">ФИО *</label>
+          <input type="text" class="qinput" id="qfio" placeholder="Иванов Иван Иванович" autocomplete="name" oninput="chkS2()" onchange="chkS2()">
+        </div>
+        <div>
+          <label class="qlabel">Телефон *</label>
+          <input type="tel" class="qinput" id="qphone" placeholder="+7 …" autocomplete="tel" oninput="chkS2()" onchange="chkS2()">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label class="qlabel">Дата рождения *</label><input type="date" class="qinput" id="qdob" oninput="chkS2()" onchange="chkS2()"></div>
+          <div><label class="qlabel">Город *</label><input type="text" class="qinput" id="qcity" placeholder="Москва" autocomplete="address-level2" oninput="chkS2()" onchange="chkS2()"></div>
+        </div>
+        <div>
+          <label class="qlabel">Навыки и опыт *</label>
+          <p style="font-size:11px;color:#9ca3af;margin:-4px 0 8px;line-height:1.4;">Укажите стек, языки, инструменты и опыт (как в резюме). ИИ сверяет текст с требованиями вакансии — без ключевых компетенций попасть в топ нельзя.</p>
+          <textarea class="qinput" id="qskills" rows="4" style="resize:vertical;min-height:96px;" placeholder="Например: Python, SQL, Git, 2 года разработки API…" oninput="chkS2()" onchange="chkS2()"></textarea>
+        </div>
+        <div>
+          <label class="qlabel">Уровень образования *</label>
+          <div class="edu-opts" id="edu-opts">
+            <button type="button" class="edu-btn" onclick="selEdu(this,'school')">Среднее</button>
+            <button type="button" class="edu-btn" onclick="selEdu(this,'college')">Ср. проф.</button>
+            <button type="button" class="edu-btn" onclick="selEdu(this,'bachelor')">Бакалавр</button>
+            <button type="button" class="edu-btn" onclick="selEdu(this,'master')">Магистр</button>
+            <button type="button" class="edu-btn" onclick="selEdu(this,'phd')">Кандидат наук</button>
+            <button type="button" class="edu-btn" onclick="selEdu(this,'student')">Студент</button>
+          </div>
+        </div>
+        <div id="github-wrap" style="display:none;">
+          <label class="qlabel">GitHub <span style="color:#d1d5db;font-weight:400;text-transform:none;letter-spacing:0;">необязательно</span></label>
+          <input type="url" class="qinput" id="qgithub" placeholder="https://github.com/username">
+        </div>
+        <div>
+          <label class="qlabel">Резюме <span style="color:#d1d5db;font-weight:400;text-transform:none;letter-spacing:0;">необязательно · PDF / DOCX</span></label>
+          <div class="file-drop" id="fdrop" ondragover="this.classList.add('drag-over');event.preventDefault()" ondragleave="this.classList.remove('drag-over')" ondrop="hDrop(event)">
+            <input type="file" accept=".pdf,.doc,.docx" onchange="hFile(event)">
+            <div id="fp"><p style="font-weight:700;font-size:13px;color:#6b7280;">Перетащи файл или нажми</p></div>
+            <div id="fc" style="display:none;font-weight:700;font-size:13px;color:var(--x5);"></div>
+          </div>
+        </div>
+      </div>
+      <p id="s2-hint" style="font-size:11px;color:#b45309;font-weight:600;margin:0 0 12px;min-height:16px;line-height:1.4;"></p>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <button type="button" class="qback" onclick="goStep(1)">← Назад</button>
+        <button type="button" class="qnext" id="qn2" disabled onclick="goFromPersonal()">Продолжить</button>
+      </div>
+    </div>
+
+    <!-- Шаг 3: профиль (только вакансии) -->
+    <div class="quiz-step" id="s3v">
+      <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.03em;margin-bottom:5px;">Профиль кандидата</h2>
+      <p style="color:#9ca3af;font-size:13px;margin-bottom:24px;">Поможет рекрутёру до настроек бота</p>
+      <div id="s3v-tech" style="display:none;">
+        <label class="qlabel">Уровень опыта</label>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;" id="exp-g">
+          <button type="button" class="opt-btn" onclick="selOpt(this,'exp-g')" data-v="junior"><span class="opt-icon" style="background:#f0fdf4;">1</span><span>Junior · до 1 года</span></button>
+          <button type="button" class="opt-btn" onclick="selOpt(this,'exp-g')" data-v="middle"><span class="opt-icon" style="background:#fefce8;">2</span><span>Middle · 1–3 года</span></button>
+          <button type="button" class="opt-btn" onclick="selOpt(this,'exp-g')" data-v="senior"><span class="opt-icon" style="background:#fdf4ff;">3</span><span>Senior · 3+ года</span></button>
+        </div>
+        <label class="qlabel">Формат работы</label>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;" id="fmt-g">
+          <button type="button" class="opt-btn" onclick="selOpt(this,'fmt-g')" data-v="office"><span class="opt-icon" style="background:#f0fdf4;">●</span><span>Офис</span></button>
+          <button type="button" class="opt-btn" onclick="selOpt(this,'fmt-g')" data-v="hybrid"><span class="opt-icon" style="background:#fefce8;">●</span><span>Гибрид</span></button>
+          <button type="button" class="opt-btn" onclick="selOpt(this,'fmt-g')" data-v="remote"><span class="opt-icon" style="background:#fdf4ff;">●</span><span>Удалённо</span></button>
+        </div>
+      </div>
+      <div id="s3v-biz" style="display:none;">
+        <label class="qlabel">Опыт в направлении</label>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;" id="bexp-g">
+          <button type="button" class="opt-btn" onclick="selOpt(this,'bexp-g')" data-v="none"><span class="opt-icon" style="background:#fefce8;">0</span><span>Нет опыта · хочу начать</span></button>
+          <button type="button" class="opt-btn" onclick="selOpt(this,'bexp-g')" data-v="some"><span class="opt-icon" style="background:#f0fdf4;">1–2</span><span>1–2 года</span></button>
+          <button type="button" class="opt-btn" onclick="selOpt(this,'bexp-g')" data-v="solid"><span class="opt-icon" style="background:#fdf4ff;">3+</span><span>3+ года</span></button>
+        </div>
+        <label class="qlabel">Цель</label>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;" id="goal-g">
+          <button type="button" class="opt-btn" onclick="selOpt(this,'goal-g')" data-v="perm"><span class="opt-icon" style="background:#f0fdf4;">★</span><span>Постоянная позиция</span></button>
+          <button type="button" class="opt-btn" onclick="selOpt(this,'goal-g')" data-v="intern"><span class="opt-icon" style="background:#fefce8;">↗</span><span>Развитие в роли</span></button>
+          <button type="button" class="opt-btn" onclick="selOpt(this,'goal-g')" data-v="explore"><span class="opt-icon" style="background:#fdf4ff;">◇</span><span>Изучаю рынок / варианты</span></button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <button type="button" class="qback" onclick="goStep(2)">← Назад</button>
+        <button type="button" class="qnext" id="qn3v" disabled onclick="goToFinal()">Далее</button>
+      </div>
+    </div>
+
+    <!-- Шаг 4: старт интервью VK -->
+    <div class="quiz-step" id="s4">
+      <h2 style="font-size:26px;font-weight:900;letter-spacing:-0.03em;margin-bottom:5px;">Готово к интервью</h2>
+      <p style="color:#9ca3af;font-size:13px;margin-bottom:24px;">Мы передадим выбранное направление в VK через параметр ref (вместе с intentId).</p>
+      <p id="vk-community-line" style="font-size:13px;margin-bottom:14px;line-height:1.5;">
+        <span style="color:#6b7280;">Сообщество VK:</span>
+        <a id="vk-community-a" href="#" target="_blank" rel="noopener" class="underline font-bold" style="color:var(--x5);">задайте ссылку в CONFIG</a>
+      </p>
+      <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+        <p style="font-size:12px;color:#92400e;font-weight:700;margin-bottom:6px;">Если ВК пишет: «Сообщество ограничило круг лиц…»</p>
+        <p style="font-size:11px;color:#a16207;line-height:1.45;">В настройках сообщества ВК откройте <strong>Сообщения → Кто может писать</strong> и разрешите входящие от пользователей (или добавьте бота в исключения). Иначе бот не сможет прислать приветствие и опрос.</p>
+      </div>
+      <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;padding:16px;margin-bottom:24px;">
+        <p style="font-size:12px;color:#15803d;font-weight:600;">Нажимая кнопку ниже, вы соглашаетесь с обработкой данных и переходом в официальный VK-бот X5.</p>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <button type="button" class="qback" onclick="goStepBackFromFinal()">← Назад</button>
+        <button type="button" class="qnext" id="btn-start-vk" onclick="startVkInterview()">Начать интервью</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Кабинет рекрутёра (экраны 7+) -->
+<div id="recruiter-app">
+  <div class="rec-top">
+    <div class="flex items-center">
+      <div class="rec-logo-bar"></div>
+      <div>
+        <div class="font-black text-sm tracking-tight">RECRUITMENT <span style="color:var(--x5)">AI</span></div>
+        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Admin Control</div>
+      </div>
+    </div>
+    <nav class="rec-nav" id="rec-nav">
+      <button type="button" class="active" data-view="top20" onclick="recView('top20')">Топ-20</button>
+      <button type="button" data-view="vac" onclick="recView('vac')">Вакансии</button>
+      <button type="button" data-view="funnel" onclick="recView('funnel')">Воронка</button>
+      <button type="button" data-view="analytics" onclick="recView('analytics')">Аналитика</button>
+    </nav>
+    <div class="rec-user">
+      <div class="font-black">Александр Р.</div>
+      <span>Recruiter Mode</span>
+      <button type="button" class="text-[10px] text-gray-400 font-bold mt-1 bg-transparent border-none cursor-pointer hover:text-gray-600" onclick="logoutRecruiter()">Выйти</button>
+    </div>
+  </div>
+
+  <div id="rec-panel-top20" class="flex flex-row flex-1 overflow-hidden" style="min-height:0;">
+    <aside class="admin-sidebar">
+      <div style="padding:22px 20px;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <p style="font-size:10px;font-weight:900;letter-spacing:0.14em;color:rgba(255,255,255,0.45);text-transform:uppercase;">Топ-20</p>
+        <p style="font-size:18px;font-weight:900;color:white;margin-top:4px;">По вакансии</p>
+        <p style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:8px;line-height:1.4;">Выберите направление — таблица и блоки сверху показывают <strong style="color:rgba(255,255,255,0.85);">только этих</strong> кандидатов (с проходным гейтом навыков ИИ).</p>
+      </div>
+      <div id="admin-vac-list" style="flex:1;"></div>
+      <button type="button" class="vac-item" style="border-top:1px solid rgba(255,255,255,0.08);color:#fca5a5;font-weight:800;" onclick="exitRecruiter()">← На лендинг</button>
+    </aside>
+    <main class="admin-main">
+      <div style="padding:22px 26px;border-bottom:1.5px solid #e5e7eb;background:white;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;">
+        <div>
+          <p style="font-size:10px;font-weight:900;letter-spacing:0.12em;color:#9ca3af;text-transform:uppercase;">Сводка</p>
+          <h3 id="admin-title" style="font-size:22px;font-weight:900;">Топ-20</h3>
+          <p class="text-xs text-gray-500 mt-1 font-medium">Рейтинг только для <strong>выбранной слева вакансии</strong> · без ключевых навыков по профилю позиции кандидат не попадает в топ · учитываются Hard/Soft, мотивация и веса</p>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+          <select id="filter-polite" class="filter-select" onchange="onPoliteFilterChange()">
+            <option value="all">Вежливость: все</option>
+            <option value="polite">Только вежливые</option>
+            <option value="toxic">Риск токсичности</option>
+          </select>
+          <button type="button" class="qnext" style="padding:10px 20px;font-size:11px;" onclick="loadAdmin()">Обновить</button>
+        </div>
+      </div>
+      <div style="padding:22px 26px;flex:1;overflow:auto;">
+        <div id="admin-top-blocks" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:20px;"></div>
+        <div style="overflow:auto;background:white;border-radius:20px;border:1.5px solid #f0f0f0;box-shadow:0 8px 30px rgba(0,121,52,.06);">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr style="background:linear-gradient(90deg,#ecfdf5,#f0fdf4);text-align:left;">
+                <th style="padding:14px 16px;font-weight:900;color:var(--x5);text-transform:uppercase;font-size:10px;">Кандидат</th>
+                <th style="padding:14px 16px;font-weight:900;color:var(--x5);text-transform:uppercase;font-size:10px;">Направление</th>
+                <th style="padding:14px 16px;font-weight:900;color:var(--x5);text-transform:uppercase;font-size:10px;">Soft</th>
+                <th style="padding:14px 16px;font-weight:900;color:var(--x5);text-transform:uppercase;font-size:10px;">Hard</th>
+                <th style="padding:14px 16px;font-weight:900;color:var(--x5);text-transform:uppercase;font-size:10px;">Motiv</th>
+                <th style="padding:14px 16px;font-weight:900;color:var(--x5);text-transform:uppercase;font-size:10px;">Вежливость</th>
+                <th style="padding:14px 16px;font-weight:900;color:var(--x5);text-transform:uppercase;font-size:10px;">AI Verdict</th>
+                <th style="padding:14px 16px;font-weight:900;color:var(--x5);text-transform:uppercase;font-size:10px;">Ключевые навыки</th>
+                <th style="padding:14px 16px;font-weight:900;color:var(--x5);text-transform:uppercase;font-size:10px;">Итого</th>
+              </tr>
+            </thead>
+            <tbody id="admin-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="rec-panel-vac" style="display:none;padding:28px;flex:1;">
+    <h2 class="text-3xl font-black mb-2">Конструктор <span style="color:var(--x5)">вакансий</span></h2>
+    <p class="text-sm text-gray-500 mb-8 font-medium">Карточки привязаны к направлениям бота (демо-интерфейс).</p>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="rec-vac-cards"></div>
+  </div>
+
+  <div id="rec-panel-funnel" style="display:none;padding:28px;flex:1;overflow:auto;">
+    <h2 class="text-2xl font-black mb-6">Воронка</h2>
+    <div class="flex flex-wrap gap-4" id="rec-funnel-cols"></div>
+  </div>
+
+  <div id="rec-panel-analytics" style="display:none;padding:28px;flex:1;">
+    <h2 class="text-2xl font-black mb-6">Аналитика</h2>
+    <div class="grid sm:grid-cols-3 gap-4" id="rec-analytics-cards"></div>
+  </div>
+</div>
+
+<script>
+/**
+ * Конфигурация: замените на ID вашего сообщества ВК (только цифры, без минуса).
+ * Ссылка vk.com/write-{ID}?ref=... передаёт контекст в бот.
+ */
+const CONFIG = {
+  /** ID сообщества (цифры, с минусом или без). Пример: 218386078 или -218386078 */
+  VK_GROUP_ID: 'ВАШ_ID_ГРУППЫ',
+  /** Прямая ссылка на страницу сообщества (если пусто — будет https://vk.com/club{N} из ID выше) */
+  VK_GROUP_URL: '',
+  /** Ключ JavaScript API Карт: https://developer.tech.yandex.ru/ */
+  YANDEX_MAP_API_KEY: '',
+  /** Демо-учётка рекрутёра: подходит почта ИЛИ телефон + пароль */
+  RECRUITER_EMAIL: 'hr@x5.demo',
+  RECRUITER_PHONE: '+79001234567',
+  RECRUITER_PASSWORD: 'x5demo',
+};
+
+/** ID для vk.com/write-{id} (только цифры клуба) */
+function vkGroupWriteId() {
+  const raw = String(CONFIG.VK_GROUP_ID || '');
+  if (/ВАШ|YOUR|placeholder|^[\s-]*$/i.test(raw)) return '';
+  const n = raw.replace(/[^0-9]/g, '');
+  return n || '';
+}
+
+/** Ссылка на страницу сообщества (для пользователя) */
+function vkCommunityPageUrl() {
+  const custom = String(CONFIG.VK_GROUP_URL || '').trim();
+  if (custom && /^https?:\/\//i.test(custom)) return custom;
+  const n = vkGroupWriteId();
+  if (!n) return '';
+  return 'https://vk.com/club' + n;
+}
+
+function syncVkCommunityLink() {
+  const a = document.getElementById('vk-community-a');
+  if (!a) return;
+  const url = vkCommunityPageUrl();
+  if (url) {
+    a.href = url;
+    a.textContent = url.replace(/^https?:\/\//, '');
+    a.onclick = null;
+  } else {
+    a.href = '#';
+    a.onclick = (e) => e.preventDefault();
+    a.textContent = 'укажите VK_GROUP_ID или VK_GROUP_URL в CONFIG';
+  }
+}
+
+/** Состояние анкеты */
+const state = {
+  vacancyId: null,
+  vacancyTitle: '',
+  category: 'internship',
+  track: 'tech',
+  edu: null,
+  fileName: null,
+};
+
+/** Стажировки: подписи как на макете + id для бота */
+const INTERN = [
+  { id:'intern_it', title:'IT-поддержка', pill:'IT-поддержка', track:'tech', icon:'💻', tag:'Технологии', color:'var(--x5)' },
+  { id:'intern_analytics', title:'Аналитика (стажировка)', pill:'Аналитика и управление продуктом', track:'biz', icon:'📊', tag:'Бизнес', color:'#9333ea' },
+  { id:'intern_dev', title:'Разработка (стажировка)', pill:'Разработка и архитектура', track:'tech', icon:'⚙️', tag:'Технологии', color:'var(--x5)' },
+  { id:'intern_ds', title:'Data Science (стажировка)', pill:'Data Science и AI', track:'tech', icon:'🧠', tag:'Технологии', color:'var(--x5)' },
+  { id:'intern_finance', title:'Финансы (стажировка)', pill:'Финансы', track:'biz', icon:'💹', tag:'Бизнес', color:'#ca8a04' },
+  { id:'intern_legal', title:'Юристы (стажировка)', pill:'Юриспруденция', track:'biz', icon:'⚖️', tag:'Бизнес', color:'#2563eb' },
+  { id:'intern_marketing', title:'Маркетинг (стажировка)', pill:'Маркетинг', track:'biz', icon:'📣', tag:'Бизнес', color:'#ea580c' },
+  { id:'intern_cyber', title:'Кибербез (стажировка)', pill:'Кибербезопасность', track:'tech', icon:'🛡️', tag:'Технологии', color:'var(--x5)' },
+  { id:'intern_cib', title:'CIB (стажировка)', pill:'CIB', track:'biz', icon:'🏦', tag:'Бизнес', color:'#0d9488' },
+  { id:'intern_qa', title:'QA (стажировка)', pill:'QA / тестирование', track:'tech', icon:'✅', tag:'Технологии', color:'var(--x5)' },
+];
+
+const VACANCIES = [
+  { id:'vac_director', title:'Директор магазина', pill:'Директор магазина', track:'biz', icon:'🏪', tag:'Розница', color:'#ca8a04' },
+  { id:'vac_sysanalyst', title:'Системный аналитик', pill:'Системный аналитик (Big Data)', track:'tech', icon:'🧩', tag:'Технологии', color:'var(--x5)' },
+  { id:'vac_logist', title:'Логист', pill:'Менеджер по логистике', track:'biz', icon:'🚚', tag:'Цепочка поставок', color:'#0369a1' },
+  { id:'vac_python', title:'Python-dev', pill:'Python-разработчик (X5 Digital)', track:'tech', icon:'🐍', tag:'Технологии', color:'var(--x5)' },
+  { id:'vac_terrmgr', title:'Терр. менеджер', pill:'Территориальный менеджер', track:'biz', icon:'🗺️', tag:'Поле', color:'#9333ea' },
+  { id:'vac_procurement', title:'Закупки', pill:'Специалист по закупкам', track:'biz', icon:'📦', tag:'Закупки', color:'#ea580c' },
+  { id:'vac_java', title:'Java Engineer', pill:'Java Engineer (Supply Chain)', track:'tech', icon:'☕', tag:'Технологии', color:'var(--x5)' },
+  { id:'vac_hr', title:'HR-партнёр', pill:'HR-бизнес партнёр', track:'biz', icon:'🤝', tag:'HR', color:'#db2777' },
+];
+
+function cardHtml(item, cat) {
+  return `<div class="dir-card" data-vid="${item.id}" data-type="${cat}" data-track="${item.track}" onclick="selDir(this)">
+    <div class="chk"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2.2" stroke-linecap="round"/></svg></div>
+    <div class="dir-icon" style="background:#f0fdf4;color:${item.color};font-size:20px;">${item.icon}</div>
+    <div class="dir-title">${item.title}</div>
+    <div class="dir-tag" style="color:${item.color};">${item.tag}</div>
+  </div>`;
+}
+
+document.getElementById('dir-grid-intern').innerHTML = INTERN.map((i) => cardHtml(i, 'internship')).join('');
+document.getElementById('dir-grid-vac').innerHTML = VACANCIES.map((i) => cardHtml(i, 'vacancy')).join('');
+
+function openQuizWithRole(id, cat, track, titleFromCard) {
+  openQuiz();
+  const el = document.querySelector(`.dir-card[data-vid="${id}"]`);
+  if (el) selDir(el);
+  else {
+    state.vacancyId = id;
+    state.category = cat;
+    state.track = track;
+    state.vacancyTitle = titleFromCard;
+    document.getElementById('qn1').disabled = false;
+    document.getElementById('github-wrap').style.display = cat === 'internship' && track === 'tech' ? 'block' : 'none';
+  }
+}
+
+(function initLandingPills() {
+  const pin = document.getElementById('landing-pills-intern');
+  const pv = document.getElementById('landing-pills-vac');
+  if (pin) {
+    INTERN.forEach((i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pill-intern';
+      b.textContent = i.pill || i.title;
+      b.onclick = () => openQuizWithRole(i.id, 'internship', i.track, i.title);
+      pin.appendChild(b);
+    });
+  }
+  if (pv) {
+    VACANCIES.forEach((i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pill-vac';
+      b.textContent = i.pill || i.title;
+      b.onclick = () => openQuizWithRole(i.id, 'vacancy', i.track, i.title);
+      pv.appendChild(b);
+    });
+  }
+})();
+
+let step = 1;
+
+function openQuiz() {
+  document.getElementById('quiz-overlay').classList.add('open');
+  setStep(1);
+}
+function closeQuiz() {
+  document.getElementById('quiz-overlay').classList.remove('open');
+}
+
+function setStep(n, back) {
+  step = n;
+  document.querySelectorAll('.quiz-step').forEach((el) => el.classList.remove('active'));
+  const el = document.getElementById(
+    n === 1 ? 's1' : n === 2 ? 's2' : n === 3 ? 's3v' : 's4'
+  );
+  if (el) el.classList.add('active');
+
+  const isIntern = state.category === 'internship';
+  const vis = isIntern ? (n <= 2 ? n : n === 4 ? 3 : n) : n;
+  const pct = Math.min(100, Math.round((vis / (isIntern ? 3 : 4)) * 100));
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('step-pct').textContent = pct + '%';
+  document.getElementById('step-label').textContent =
+    'Шаг ' + (isIntern ? (n === 4 ? 3 : Math.min(n, 3)) : Math.min(n, 4)) + ' из ' + (isIntern ? 3 : 4);
+
+  if (n === 3) {
+    document.getElementById('s3v-tech').style.display = state.track === 'tech' ? 'block' : 'none';
+    document.getElementById('s3v-biz').style.display = state.track === 'biz' ? 'block' : 'none';
+  }
+
+  if (n === 2) {
+    chkS2();
+    requestAnimationFrame(chkS2);
+    setTimeout(chkS2, 150);
+    setTimeout(chkS2, 600);
+  }
+  if (n === 4) syncVkCommunityLink();
+}
+
+function selDir(el) {
+  document.querySelectorAll('.dir-card').forEach((c) => c.classList.remove('selected'));
+  el.classList.add('selected');
+  state.vacancyId = el.dataset.vid;
+  state.category = el.dataset.type;
+  state.track = el.dataset.track;
+  state.vacancyTitle = el.querySelector('.dir-title').textContent;
+  document.getElementById('qn1').disabled = false;
+  const gh = document.getElementById('github-wrap');
+  gh.style.display = state.category === 'internship' && state.track === 'tech' ? 'block' : 'none';
+}
+
+/** Переход между шагами модалки */
+function goStep(n) {
+  if (n === 1) setStep(1);
+  if (n === 2) {
+    setStep(2);
+    chkS2();
+  }
+  if (n === 3) {
+    setStep(3);
+    chkS3();
+  }
+}
+
+function goFromPersonal() {
+  const isIntern = state.category === 'internship';
+  if (isIntern) setStep(4);
+  else setStep(3);
+}
+
+function goToFinal() {
+  setStep(4);
+}
+
+function goStepBackFromFinal() {
+  const isIntern = state.category === 'internship';
+  setStep(isIntern ? 2 : 3);
+}
+
+/** Валидация шага 3 (вакансии) */
+function chkS3() {
+  const tech = state.track === 'tech';
+  const ok = tech
+    ? document.querySelector('#exp-g .selected') && document.querySelector('#fmt-g .selected')
+    : document.querySelector('#bexp-g .selected') && document.querySelector('#goal-g .selected');
+  document.getElementById('qn3v').disabled = !ok;
+}
+
+function chkS2() {
+  const elHint = document.getElementById('s2-hint');
+  const fio = document.getElementById('qfio').value.trim();
+  const phone = document.getElementById('qphone').value.trim();
+  const phoneDigits = phone.replace(/\D/g, '');
+  const dob = document.getElementById('qdob').value;
+  const city = document.getElementById('qcity').value.trim();
+  const skills = (document.getElementById('qskills') && document.getElementById('qskills').value.trim()) || '';
+  const missing = [];
+  if (fio.length < 5) missing.push('ФИО (полностью)');
+  if (phoneDigits.length < 10) missing.push('телефон (от 10 цифр)');
+  if (!dob) missing.push('дата рождения');
+  if (city.length < 2) missing.push('город');
+  if (!state.edu) missing.push('уровень образования — нажмите одну из кнопок выше');
+  if (skills.length < 10) missing.push('навыки и опыт (минимум ~10 символов)');
+  const ok = missing.length === 0;
+  const qn2 = document.getElementById('qn2');
+  if (qn2) qn2.disabled = !ok;
+  if (elHint) elHint.textContent = ok ? '' : 'Чтобы активировать «Продолжить»: ' + missing.join('; ') + '.';
+}
+
+function selEdu(btn, v) {
+  document.querySelectorAll('.edu-btn').forEach((b) => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.edu = v;
+  chkS2();
+}
+
+function selOpt(btn, group) {
+  document.querySelectorAll('#' + group + ' .opt-btn').forEach((b) => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  chkS3();
+}
+
+function hFile(e) {
+  const f = e.target.files[0];
+  document.getElementById('fc').style.display = f ? 'block' : 'none';
+  document.getElementById('fp').style.display = f ? 'none' : 'block';
+  if (f) {
+    document.getElementById('fc').textContent = f.name;
+    state.fileName = f.name;
+  }
+}
+function hDrop(e) {
+  e.preventDefault();
+  document.getElementById('fdrop').classList.remove('drag-over');
+}
+
+/** Сохранение в localStorage + intent на сервер + редирект в VK */
+async function startVkInterview() {
+  const btn = document.getElementById('btn-start-vk');
+  btn.disabled = true;
+  const loader = document.getElementById('vk-loader');
+  loader.classList.add('open');
+
+  const fio = document.getElementById('qfio').value.trim();
+  const phone = document.getElementById('qphone').value.trim();
+  const payload = {
+    fio,
+    phone,
+    vacancyId: state.vacancyId,
+    vacancyTitle: state.vacancyTitle,
+    category: state.category,
+    track: state.track,
+    edu: state.edu,
+    dob: document.getElementById('qdob').value,
+    city: document.getElementById('qcity').value.trim(),
+    github: document.getElementById('qgithub').value.trim(),
+    resumeFile: state.fileName,
+    savedAt: new Date().toISOString(),
+  };
+
+  try {
+    localStorage.setItem('x5_hr_apply', JSON.stringify(payload));
+  } catch (e) {
+    console.warn('localStorage', e);
+  }
+
+  const intentId = crypto.randomUUID();
+  try {
+    await fetch('/api/intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        intentId,
+        fio,
+        phone,
+        vacancyId: state.vacancyId,
+        vacancyTitle: state.vacancyTitle,
+        category: state.category,
+        skillsNote: document.getElementById('qskills').value.trim(),
+      }),
+    });
+  } catch (e) {
+    console.warn('intent API', e);
+  }
+
+  const ref = encodeURIComponent(JSON.stringify({ v: state.vacancyId, i: intentId }));
+  const gid = vkGroupWriteId();
+  if (!gid) {
+    btn.disabled = false;
+    loader.classList.remove('open');
+    alert('Укажите числовой VK_GROUP_ID в CONFIG (index.html), иначе ссылка на бота не соберётся.');
+    return;
+  }
+  const target = `https://vk.com/write-${gid}?ref=${ref}`;
+
+  await new Promise((r) => setTimeout(r, 1100));
+  window.location.href = target;
+}
+
+/** Кабинет рекрутёра */
+let adminVacFilter = null;
+let adminRows = [];
+
+function openLogin() {
+  document.getElementById('login-err').style.display = 'none';
+  document.getElementById('login-overlay').classList.add('open');
+  document.getElementById('login-id').value = '';
+  document.getElementById('login-pass').value = '';
+}
+function closeLogin() {
+  document.getElementById('login-overlay').classList.remove('open');
+}
+function submitLogin() {
+  const idRaw = document.getElementById('login-id').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const emailOk = idRaw.toLowerCase() === String(CONFIG.RECRUITER_EMAIL || '').toLowerCase();
+  const digitsId = idRaw.replace(/\D/g, '');
+  const digitsCfg = String(CONFIG.RECRUITER_PHONE || '').replace(/\D/g, '');
+  const phoneOk = digitsId.length >= 10 && digitsId === digitsCfg;
+  if ((emailOk || phoneOk) && pass === CONFIG.RECRUITER_PASSWORD) {
+    sessionStorage.setItem('x5_recruiter', '1');
+    closeLogin();
+    showRecruiter();
+  } else document.getElementById('login-err').style.display = 'block';
+}
+function showRecruiter() {
+  document.getElementById('landing-stack').style.display = 'none';
+  document.getElementById('recruiter-app').classList.add('open');
+  recView('top20');
+  loadAdmin();
+}
+function exitRecruiter() {
+  document.getElementById('recruiter-app').classList.remove('open');
+  document.getElementById('landing-stack').style.display = 'block';
+}
+function logoutRecruiter() {
+  sessionStorage.removeItem('x5_recruiter');
+  exitRecruiter();
+}
+function recView(name) {
+  document.querySelectorAll('#rec-nav button').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
+  document.getElementById('rec-panel-top20').style.display = name === 'top20' ? 'flex' : 'none';
+  document.getElementById('rec-panel-vac').style.display = name === 'vac' ? 'block' : 'none';
+  document.getElementById('rec-panel-funnel').style.display = name === 'funnel' ? 'block' : 'none';
+  document.getElementById('rec-panel-analytics').style.display = name === 'analytics' ? 'block' : 'none';
+  if (name === 'vac') renderVacConstructor();
+  if (name === 'funnel') renderFunnel();
+  if (name === 'analytics') renderAnalytics();
+}
+
+async function loadAdmin() {
+  try {
+    const r = await fetch('/api/candidates');
+    adminRows = await r.json();
+  } catch {
+    adminRows = [];
+  }
+  const titles = [...new Set(adminRows.map((c) => c.vacancyTitle).filter(Boolean))].sort();
+  const counts = {};
+  adminRows.forEach((c) => {
+    const k = c.vacancyTitle || '—';
+    counts[k] = (counts[k] || 0) + 1;
+  });
+  const keys = Object.keys(counts).sort();
+  if (adminVacFilter && !keys.includes(adminVacFilter)) adminVacFilter = keys[0] || null;
+  if (!adminVacFilter && titles.length) adminVacFilter = titles[0];
+  buildVacSidebar();
+  renderAdminTable();
+  renderTopBlocks();
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function buildVacSidebar() {
+  const counts = {};
+  adminRows.forEach((c) => {
+    const k = c.vacancyTitle || '—';
+    counts[k] = (counts[k] || 0) + 1;
+  });
+  const keys = Object.keys(counts).sort();
+  const wrap = document.getElementById('admin-vac-list');
+  wrap.innerHTML = '';
+  if (!keys.length) {
+    wrap.innerHTML =
+      '<p style="padding:16px;font-size:12px;color:rgba(255,255,255,0.45);">Пока нет откликов — данные появятся после прохождения бота.</p>';
+    return;
+  }
+
+  const mkBtn = (label, count, filterVal, active) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'vac-item' + (active ? ' active' : '');
+    b.innerHTML = `<span class="vac-name">${escapeHtml(label)}</span><span class="vac-count">${count}</span>`;
+    b.onclick = () => setAdminVac(filterVal);
+    wrap.appendChild(b);
+  };
+
+  keys.forEach((k) => mkBtn(k, counts[k], k, adminVacFilter === k));
+}
+
+function onPoliteFilterChange() {
+  renderAdminTable();
+  renderTopBlocks();
+}
+
+function setAdminVac(v) {
+  adminVacFilter = v;
+  document.getElementById('admin-title').textContent = v ? 'Топ-20 · ' + v : 'Топ-20';
+  buildVacSidebar();
+  renderAdminTable();
+  renderTopBlocks();
+}
+
+/** Итог: взвешенный балл с бэкенда или упрощённое среднее для старых записей */
+function combinedScore(c) {
+  if (c.weightedScore != null && !Number.isNaN(Number(c.weightedScore))) return Number(c.weightedScore);
+  const h = Number(c.hardPct) || 0;
+  const s = Number(c.softScore) || 0;
+  const m = Number(c.motivationScore) || 0;
+  return Math.round((h + s + m) / 3);
+}
+
+function renderTopBlocks() {
+  const polite = document.getElementById('filter-polite').value;
+  let rows = adminRows.filter((c) => c.skillGatePassed !== false);
+  if (adminVacFilter) rows = rows.filter((c) => c.vacancyTitle === adminVacFilter);
+  else {
+    document.getElementById('admin-top-blocks').innerHTML =
+      '<p class="text-sm text-gray-500 font-medium">Выберите вакансию слева, чтобы увидеть топ-20 по этой позиции.</p>';
+    return;
+  }
+  if (polite === 'polite') rows = rows.filter((c) => c.polite && !c.toxic);
+  if (polite === 'toxic') rows = rows.filter((c) => c.toxic || !c.polite);
+
+  const byVac = {};
+  rows.forEach((c) => {
+    const k = c.vacancyTitle || '—';
+    if (!byVac[k]) byVac[k] = [];
+    byVac[k].push(c);
+  });
+
+  const blocks = Object.keys(byVac)
+    .sort()
+    .map((title) => {
+      const list = byVac[title]
+        .map((c) => ({ c, score: combinedScore(c) }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 20);
+      const inner = list
+        .map(
+          (x, i) =>
+            `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f3f4f6;font-size:12px;"><span><b>${i + 1}.</b> ${x.c.fio || 'VK ' + x.c.vkUserId}</span><span style="font-weight:900;color:var(--x5);">${x.score}</span></div>`
+        )
+        .join('');
+      return `<div class="stat-card"><p style="font-size:11px;font-weight:900;color:#9ca3af;text-transform:uppercase;">Топ-20 · ${title}</p><div style="margin-top:8px;">${inner || '<p style="color:#9ca3af;font-size:12px;">Нет данных</p>'}</div></div>`;
+    })
+    .join('');
+  document.getElementById('admin-top-blocks').innerHTML =
+    blocks ||
+    '<p class="text-sm text-gray-500 font-medium">По выбранной вакансии пока никто не прошёл гейт навыков ИИ или нет откликов — проверьте фильтр вежливости или пройдите бота с заполненными навыками.</p>';
+}
+
+function renderAdminTable() {
+  const polite = document.getElementById('filter-polite').value;
+  const tbody = document.getElementById('admin-tbody');
+  if (!adminVacFilter) {
+    tbody.innerHTML =
+      '<tr><td colspan="9" style="padding:40px;text-align:center;color:#6b7280;font-weight:600;">Нет данных или не выбрано направление. Загрузите кандидатов и выберите вакансию слева — таблица показывает до 20 человек только по этой вакансии (с проходным гейтом навыков).</td></tr>';
+    return;
+  }
+  let rows = adminRows.filter((c) => c.vacancyTitle === adminVacFilter && c.skillGatePassed !== false);
+  if (polite === 'polite') rows = rows.filter((c) => c.polite && !c.toxic);
+  if (polite === 'toxic') rows = rows.filter((c) => c.toxic || !c.polite);
+  rows = rows.sort((a, b) => combinedScore(b) - combinedScore(a)).slice(0, 20);
+
+  tbody.innerHTML = rows
+    .map((c) => {
+      const hardN = Number(c.hardScore);
+      const hard100 = Math.round(Number(c.hardPct) || 0);
+      const soft100 = Math.round(Number(c.softScore) || 0);
+      const motiv100 = Math.round(Number(c.motivationScore) || 0);
+      const wNote =
+        c.weightHard != null
+          ? `<span style="font-size:9px;color:#9ca3af;display:block;">W:${Number(c.weightHard).toFixed(2)}/${Number(c.weightSoft).toFixed(2)}/${Number(c.weightMotiv).toFixed(2)}</span>`
+          : '';
+      const fitLine =
+        c.skillFitScore != null
+          ? `<div style="font-size:10px;color:#059669;font-weight:800;margin-top:4px;">Соответствие навыков (ИИ): ${c.skillFitScore}%</div>`
+          : '';
+      const politeBadge =
+        c.toxic || c.polite === false
+          ? '<span class="polite-red">Риск</span>'
+          : '<span class="polite-green">Ок</span>';
+      const tags = (c.tags || []).map((t) => `<span class="tag-kw">${escapeHtml(t)}</span>`).join(' ');
+      const vkLink = c.vkUserId ? `<a href="https://vk.com/id${c.vkUserId}" target="_blank" rel="noopener" style="color:var(--x5);font-weight:700;">VK</a>` : '';
+      const nm = escapeHtml(c.fio || 'Кандидат #' + (c.vkUserId || '—'));
+      const role = escapeHtml((c.vacancyTitle || '').toUpperCase());
+      return `<tr style="border-bottom:1px solid #f3f4f6;">
+        <td style="padding:14px 16px;font-weight:800;">${nm}${wNote}<div style="font-size:10px;color:var(--x5);font-weight:700;margin-top:4px;">${role}</div>${fitLine}<div style="font-size:10px;color:#9ca3af;font-weight:600;">${escapeHtml(c.phone || '')} ${vkLink}</div></td>
+        <td style="padding:14px 16px;font-weight:600;">${escapeHtml(c.vacancyTitle || '—')}</td>
+        <td style="padding:14px 16px;text-align:center;"><span class="score-cell sc-soft">${soft100}</span></td>
+        <td style="padding:14px 16px;text-align:center;"><span class="score-cell sc-hard" title="Викторина ${hardN}/5">${hard100}</span></td>
+        <td style="padding:14px 16px;text-align:center;"><span class="score-cell sc-motiv">${motiv100}</span></td>
+        <td style="padding:14px 16px;">${politeBadge}</td>
+        <td style="padding:14px 16px;max-width:200px;font-size:11px;">${escapeHtml(c.aiVerdict || '')}</td>
+        <td style="padding:14px 16px;">${tags}</td>
+        <td style="padding:14px 16px;text-align:center;font-size:20px;font-weight:900;color:var(--x5);">${combinedScore(c)}</td>
+      </tr>`;
+    })
+    .join('');
+}
+
+function renderVacConstructor() {
+  const box = document.getElementById('rec-vac-cards');
+  box.innerHTML = '';
+  const all = [
+    ...INTERN.map((i) => ({ ...i, catLabel: 'Стажировка' })),
+    ...VACANCIES.map((i) => ({ ...i, catLabel: 'Вакансия' })),
+  ];
+  all.forEach((i) => {
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    card.style.borderRadius = '24px';
+    card.style.padding = '22px';
+    card.innerHTML = `<span style="font-size:10px;font-weight:900;color:var(--x5);background:#f0fdf4;padding:4px 10px;border-radius:100px;">АКТИВНА</span>
+      <h4 class="font-black mt-4 text-lg">${escapeHtml(i.pill || i.title)}</h4>
+      <p class="text-xs text-gray-500 mt-1">${escapeHtml(i.catLabel)} · ${escapeHtml(i.tag)}</p>`;
+    box.appendChild(card);
+  });
+}
+
+function renderFunnel() {
+  let rows = adminRows.filter((c) => c.skillGatePassed !== false);
+  if (adminVacFilter) rows = rows.filter((c) => c.vacancyTitle === adminVacFilter);
+  const bucket = (c) => {
+    const s = combinedScore(c);
+    if (s < 55) return 0;
+    if (s < 75) return 1;
+    return 2;
+  };
+  const cols = [[], [], []];
+  rows.forEach((c) => cols[bucket(c)].push(c));
+  const titles = ['SCREENING', 'TEST', 'INTERVIEW'];
+  const el = document.getElementById('rec-funnel-cols');
+  el.innerHTML = titles
+    .map((t, i) => {
+      const cards = cols[i]
+        .map(
+          (c) =>
+            `<div class="kanban-card"><div class="flex justify-between items-center"><span>${escapeHtml(c.fio || 'Кандидат #' + c.vkUserId)}</span><span style="color:var(--x5)">${combinedScore(c)} pts</span></div><div class="text-[10px] text-gray-500 mt-1">${escapeHtml(c.vacancyTitle || '')}</div></div>`
+        )
+        .join('');
+      return `<div class="kanban-col"><h3 class="text-xs font-black text-green-700 mb-3">${t}</h3>${cards || '<p class="text-xs text-gray-400">Пусто</p>'}</div>`;
+    })
+    .join('');
+}
+
+function renderAnalytics() {
+  const n = adminRows.length;
+  const avg = n ? Math.round(adminRows.reduce((a, c) => a + combinedScore(c), 0) / n) : 0;
+  const politeN = adminRows.filter((c) => c.polite && !c.toxic).length;
+  document.getElementById('rec-analytics-cards').innerHTML = `
+    <div class="stat-card"><p class="text-xs font-bold text-gray-400 uppercase">Всего сессий</p><p class="text-3xl font-black mt-2" style="color:var(--x5)">${n}</p></div>
+    <div class="stat-card"><p class="text-xs font-bold text-gray-400 uppercase">Средний итог</p><p class="text-3xl font-black mt-2">${avg}</p></div>
+    <div class="stat-card"><p class="text-xs font-bold text-gray-400 uppercase">Вежливых (оценка ИИ)</p><p class="text-3xl font-black mt-2">${politeN}</p></div>`;
+}
+
+/** Демо-координаты: замените на реальные из корпоративной геобазы X5 */
+const X5_MAP_PLACES = [
+  { coords: [55.7558, 37.6176], name: 'Центральный офис (демо-метка)', preset: 'islands#greenDotIcon' },
+  { coords: [55.7922, 37.6044], name: '«Пятёрочка» · торговая точка (демо)' },
+  { coords: [55.7322, 37.6422], name: '«Перекрёсток» · торговая точка (демо)' },
+  { coords: [55.6822, 37.5522], name: 'Региональный офис / логистика (демо)' },
+  { coords: [55.8222, 37.7022], name: 'Магазин у дома (демо)' },
+  { coords: [59.9343, 30.3351], name: 'Санкт-Петербург · сеть X5 (демо)' },
+];
+
+let yandexMapLoaderState = 'idle';
+
+function initYandexMap() {
+  const el = document.getElementById('yandex-map');
+  if (!el || yandexMapLoaderState !== 'idle') return;
+  const key = String(CONFIG.YANDEX_MAP_API_KEY || '').trim();
+  if (!key) {
+    el.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;min-height:380px;padding:28px;text-align:center;color:#6b7280;font-weight:600;font-size:13px;line-height:1.5;background:linear-gradient(180deg,#f9fafb,#f3f4f6);border-radius:0 0 38px 38px;">Укажите ключ <strong style="color:var(--x5);">CONFIG.YANDEX_MAP_API_KEY</strong> в этом файле (JavaScript API и HTTP Геокодер в кабинете <a href="https://developer.tech.yandex.ru/" class="underline" target="_blank" rel="noopener">Яндекса</a>).</div>';
+    return;
+  }
+  yandexMapLoaderState = 'loading';
+  const scr = document.createElement('script');
+  scr.src = 'https://api-maps.yandex.ru/2.1/?apikey=' + encodeURIComponent(key) + '&lang=ru_RU';
+  scr.async = true;
+  scr.onload = function () {
+    window.ymaps.ready(function () {
+      const map = new window.ymaps.Map('yandex-map', {
+        center: [55.76, 37.62],
+        zoom: 9,
+        controls: ['zoomControl', 'fullscreenControl', 'geolocationControl'],
+      });
+      X5_MAP_PLACES.forEach(function (p) {
+        map.geoObjects.add(
+          new window.ymaps.Placemark(
+            p.coords,
+            { balloonContent: p.name, hintContent: p.name },
+            { preset: p.preset || 'islands#blueCircleDotIcon' }
+          )
+        );
+      });
+    });
+  };
+  scr.onerror = function () {
+    yandexMapLoaderState = 'idle';
+    el.innerHTML =
+      '<div style="padding:28px;color:#b91c1c;font-weight:700;">Не удалось загрузить API карт. Проверьте ключ и разрешённый домен в кабинете разработчика.</div>';
+  };
+  document.head.appendChild(scr);
+}
+
+initYandexMap();
+syncVkCommunityLink();
+
+if (sessionStorage.getItem('x5_recruiter') === '1') showRecruiter();
+</script>
+</body>
+</html>
