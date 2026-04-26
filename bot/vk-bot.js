@@ -220,10 +220,18 @@ export async function handleIncomingMessage(vk, message) {
       ? `Соответствие навыков (ИИ): ${saved.skillFitScore}/100 — в топе.`
       : `Соответствие навыков (ИИ): ${saved.skillFitScore}/100 — не хватает: ${(saved.skillMissing || []).join('; ') || saved.skillFitReason}. В рейтинге топа не участвуете до доп. проверки HR.`;
 
-    await vk.sendMessage(
-      peerId,
-      `Спасибо! Итог:\nHard: ${session.hardCorrect}/5 (0–100: ${saved.hard100})\nSoft (ИИ): ${ai.score}/10 (0–100: ${saved.soft100})\nМотивация: ${saved.motiv100}\nИтог взвешенный: ${saved.weightedScore}/100\n${gateLine}\n${politeLabel}\nРезюме ИИ: ${ai.summary}\n\nДанные переданы рекрутёру.`
-    );
+    const isBad = saved.skillGatePassed === false || Number(saved.weightedScore || 0) < 60;
+    if (isBad) {
+      await vk.sendMessage(
+        peerId,
+        'Спасибо за ответы! Мы получили вашу анкету и передали её рекрутёру.\nВ ближайшее время с вами свяжутся, если появятся подходящие предложения.\nЕсли хотите усилить отклик — можете дописать опыт/стек и отправить /start, чтобы пройти заново.'
+      );
+    } else {
+      await vk.sendMessage(
+        peerId,
+        `Спасибо! Итог:\nHard: ${session.hardCorrect}/5 (0–100: ${saved.hard100})\nSoft (ИИ): ${ai.score}/10 (0–100: ${saved.soft100})\nМотивация: ${saved.motiv100}\nИтог взвешенный: ${saved.weightedScore}/100\n${gateLine}\n${politeLabel}\nРезюме ИИ: ${ai.summary}\n\nДанные переданы рекрутёру.`
+      );
+    }
     return;
   }
 
