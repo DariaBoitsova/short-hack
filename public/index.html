@@ -114,8 +114,6 @@ body { font-family:'Geologica',sans-serif; color:var(--graphite); scroll-behavio
 .map-wrap { position:relative; border-radius:40px; min-height:420px; background:#fff; border:2px solid rgba(255,255,255,.9); box-shadow:0 20px 60px rgba(0,0,0,.06); overflow:hidden; }
 #yandex-map { width:100%; height:420px; }
 .vac-floater { position:absolute; bottom:24px; right:24px; z-index:2; background:#fff; border-radius:24px; padding:18px 24px; box-shadow:0 16px 40px rgba(0,0,0,.12); pointer-events:none; }
-.card-ai { background:var(--lavender); border-radius:36px; padding:32px 28px; min-height:240px; }
-.card-rate { background:var(--mint-card); border-radius:36px; padding:32px 28px; min-height:240px; }
 .cta-pill { background:var(--mint-cta); color:var(--mint-cta-text); border:none; border-radius:999px; padding:18px 40px; font-weight:900; font-size:13px; letter-spacing:.06em; cursor:pointer; box-shadow:0 12px 32px rgba(26,60,52,.12); transition:transform .2s; }
 .cta-pill:hover { transform:translateY(-2px); }
 /* --- Кабинет рекрутёра (с 7-го экрана) --- */
@@ -217,27 +215,9 @@ body { font-family:'Geologica',sans-serif; color:var(--graphite); scroll-behavio
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-10 max-w-3xl mx-auto" id="landing-pills-vac"></div>
 </section>
 
-<!-- Экран 5: ИИ + рейтинг -->
-<section class="max-w-6xl mx-auto px-5 pb-20">
-  <div class="grid md:grid-cols-2 gap-6">
-    <div class="card-ai">
-      <h3 class="text-xl font-black text-purple-900">ИИ-Скрининг 2.0</h3>
-      <p class="mt-3 text-sm font-medium text-purple-900/80 leading-relaxed">Наша нейросеть анализирует не только текущий опыт, но и твой скрытый потенциал роста в компании.</p>
-      <div class="mt-6 inline-flex items-center gap-2 bg-white/90 rounded-full px-4 py-2 text-xs font-bold text-gray-700">
-        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> 5284 активных сессий
-      </div>
-    </div>
-    <div class="card-rate">
-      <h3 class="text-sm font-black uppercase tracking-widest" style="color:var(--x5-deep)">Рейтинг</h3>
-      <p class="text-2xl mt-3">⭐⭐⭐⭐⭐</p>
-      <p class="mt-3 text-sm font-bold" style="color:var(--x5-deep)">98% кандидатов рекомендуют нас друзьям</p>
-    </div>
-  </div>
-</section>
-
 <!-- Экран 6: CTA + футер -->
 <section class="max-w-6xl mx-auto px-5 pb-24 text-center">
-  <button type="button" class="cta-pill" onclick="openQuiz()">Начать расчёт рейтинга</button>
+  <button type="button" class="cta-pill" onclick="openQuiz()">Откликнуться</button>
   <div class="mt-16 grid sm:grid-cols-2 gap-10 text-left max-w-3xl mx-auto">
     <div>
       <p class="font-black text-lg">HR-FLOW AI</p>
@@ -288,10 +268,10 @@ body { font-family:'Geologica',sans-serif; color:var(--graphite); scroll-behavio
         </div>
         <div>
           <label class="qlabel">Телефон *</label>
-          <input type="tel" class="qinput" id="qphone" placeholder="+7 …" autocomplete="tel" oninput="chkS2()" onchange="chkS2()">
+          <input type="tel" class="qinput" id="qphone" placeholder="+7XXXXXXXXXX или 8XXXXXXXXXX" autocomplete="tel" oninput="chkS2()" onchange="chkS2()">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div><label class="qlabel">Дата рождения *</label><input type="date" class="qinput" id="qdob" oninput="chkS2()" onchange="chkS2()"></div>
+          <div><label class="qlabel">Дата рождения *</label><input type="date" class="qinput" id="qdob" min="1930-01-01" max="2026-12-31" oninput="chkS2()" onchange="chkS2()"></div>
           <div><label class="qlabel">Город *</label><input type="text" class="qinput" id="qcity" placeholder="Москва" autocomplete="address-level2" oninput="chkS2()" onchange="chkS2()"></div>
         </div>
         <div>
@@ -403,7 +383,6 @@ body { font-family:'Geologica',sans-serif; color:var(--graphite); scroll-behavio
     </div>
     <nav class="rec-nav" id="rec-nav">
       <button type="button" class="active" data-view="top20" onclick="recView('top20')">Топ-20</button>
-      <button type="button" data-view="vac" onclick="recView('vac')">Вакансии</button>
       <button type="button" data-view="funnel" onclick="recView('funnel')">Воронка</button>
       <button type="button" data-view="analytics" onclick="recView('analytics')">Аналитика</button>
     </nav>
@@ -464,12 +443,6 @@ body { font-family:'Geologica',sans-serif; color:var(--graphite); scroll-behavio
     </main>
   </div>
 
-  <div id="rec-panel-vac" style="display:none;padding:28px;flex:1;">
-    <h2 class="text-3xl font-black mb-2">Конструктор <span style="color:var(--x5)">вакансий</span></h2>
-    <p class="text-sm text-gray-500 mb-8 font-medium">Карточки привязаны к направлениям бота (демо-интерфейс).</p>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" id="rec-vac-cards"></div>
-  </div>
-
   <div id="rec-panel-funnel" style="display:none;padding:28px;flex:1;overflow:auto;">
     <h2 class="text-2xl font-black mb-6">Воронка</h2>
     <div class="flex flex-wrap gap-4" id="rec-funnel-cols"></div>
@@ -488,11 +461,11 @@ body { font-family:'Geologica',sans-serif; color:var(--graphite); scroll-behavio
  */
 const CONFIG = {
   /** ID сообщества (цифры, с минусом или без). Пример: 218386078 или -218386078 */
-  VK_GROUP_ID: 'ВАШ_ID_ГРУППЫ',
+  VK_GROUP_ID: '238099200',
   /** Прямая ссылка на страницу сообщества (если пусто — будет https://vk.com/club{N} из ID выше) */
-  VK_GROUP_URL: '',
+  VK_GROUP_URL: 'https://vk.com/club238099200',
   /** Ключ JavaScript API Карт: https://developer.tech.yandex.ru/ */
-  YANDEX_MAP_API_KEY: '',
+  YANDEX_MAP_API_KEY: '6d53fa1f-2cb6-4cc1-96ce-e7abac7afe43',
   /** Демо-учётка рекрутёра: подходит почта ИЛИ телефон + пароль */
   RECRUITER_EMAIL: 'hr@x5.demo',
   RECRUITER_PHONE: '+79001234567',
@@ -710,14 +683,13 @@ function chkS2() {
   const elHint = document.getElementById('s2-hint');
   const fio = document.getElementById('qfio').value.trim();
   const phone = document.getElementById('qphone').value.trim();
-  const phoneDigits = phone.replace(/\D/g, '');
   const dob = document.getElementById('qdob').value;
   const city = document.getElementById('qcity').value.trim();
   const skills = (document.getElementById('qskills') && document.getElementById('qskills').value.trim()) || '';
   const missing = [];
-  if (fio.length < 5) missing.push('ФИО (полностью)');
-  if (phoneDigits.length < 10) missing.push('телефон (от 10 цифр)');
-  if (!dob) missing.push('дата рождения');
+  if (!isValidFio(fio)) missing.push('ФИО (2–3 слова, каждое с заглавной буквы)');
+  if (!isValidRuPhone(phone)) missing.push('телефон (+7XXXXXXXXXX или 8XXXXXXXXXX)');
+  if (!isValidDob(dob)) missing.push('дата рождения (год 1930–2026)');
   if (city.length < 2) missing.push('город');
   if (!state.edu) missing.push('уровень образования — нажмите одну из кнопок выше');
   if (skills.length < 10) missing.push('навыки и опыт (минимум ~10 символов)');
@@ -725,6 +697,34 @@ function chkS2() {
   const qn2 = document.getElementById('qn2');
   if (qn2) qn2.disabled = !ok;
   if (elHint) elHint.textContent = ok ? '' : 'Чтобы активировать «Продолжить»: ' + missing.join('; ') + '.';
+}
+
+function isValidRuPhone(raw) {
+  const s = String(raw || '').trim().replace(/[()\s-]/g, '');
+  if (!s) return false;
+  if (/^\+7\d{10}$/.test(s)) return true;
+  if (/^8\d{10}$/.test(s)) return true;
+  return false;
+}
+
+function isValidDob(raw) {
+  const s = String(raw || '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
+  const y = Number(s.slice(0, 4));
+  if (!Number.isFinite(y) || y < 1930 || y > 2026) return false;
+  return true;
+}
+
+function isValidFio(raw) {
+  const s = String(raw || '')
+    .trim()
+    .replace(/\s+/g, ' ');
+  if (!s) return false;
+  const parts = s.split(' ');
+  if (parts.length < 2 || parts.length > 3) return false;
+  const wordOk = (w) =>
+    /^([A-ZА-ЯЁ][a-zа-яё]+)(-[A-ZА-ЯЁ][a-zа-яё]+)?$/.test(String(w || '').trim());
+  return parts.every(wordOk);
 }
 
 function selEdu(btn, v) {
@@ -760,6 +760,23 @@ async function startVkInterview() {
   btn.disabled = true;
   const loader = document.getElementById('vk-loader');
   loader.classList.add('open');
+
+  // Доп. валидация на финальном шаге (на случай прямого перехода)
+  chkS2();
+  if (document.getElementById('qn2')?.disabled) {
+    loader.classList.remove('open');
+    btn.disabled = false;
+    alert('Заполните корректно «Общие данные» (ФИО, телефон, дата рождения, город, образование и навыки).');
+    setStep(2);
+    return;
+  }
+  if (!state.vacancyId) {
+    loader.classList.remove('open');
+    btn.disabled = false;
+    alert('Сначала выберите направление (шаг 1).');
+    setStep(1);
+    return;
+  }
 
   const fio = document.getElementById('qfio').value.trim();
   const phone = document.getElementById('qphone').value.trim();
@@ -797,6 +814,7 @@ async function startVkInterview() {
         vacancyTitle: state.vacancyTitle,
         category: state.category,
         skillsNote: document.getElementById('qskills').value.trim(),
+        github: document.getElementById('qgithub').value.trim(),
       }),
     });
   } catch (e) {
@@ -833,6 +851,24 @@ function closeLogin() {
 function submitLogin() {
   const idRaw = document.getElementById('login-id').value.trim();
   const pass = document.getElementById('login-pass').value;
+  if (!idRaw || !pass) {
+    const el = document.getElementById('login-err');
+    el.textContent = 'Введите e-mail/телефон и пароль';
+    el.style.display = 'block';
+    return;
+  }
+
+  // Базовая валидация формата логина: либо телефон (+7/8...), либо email с @
+  const looksPhone = isValidRuPhone(idRaw);
+  const looksEmail = idRaw.includes('@');
+  if (!looksPhone && !looksEmail) {
+    const el = document.getElementById('login-err');
+    el.textContent = 'Логин должен быть телефоном (+7… или 8…) или почтой (с @)';
+    el.style.display = 'block';
+    return;
+  }
+
+  document.getElementById('login-err').textContent = 'Неверные данные';
   const emailOk = idRaw.toLowerCase() === String(CONFIG.RECRUITER_EMAIL || '').toLowerCase();
   const digitsId = idRaw.replace(/\D/g, '');
   const digitsCfg = String(CONFIG.RECRUITER_PHONE || '').replace(/\D/g, '');
@@ -860,10 +896,8 @@ function logoutRecruiter() {
 function recView(name) {
   document.querySelectorAll('#rec-nav button').forEach((b) => b.classList.toggle('active', b.dataset.view === name));
   document.getElementById('rec-panel-top20').style.display = name === 'top20' ? 'flex' : 'none';
-  document.getElementById('rec-panel-vac').style.display = name === 'vac' ? 'block' : 'none';
   document.getElementById('rec-panel-funnel').style.display = name === 'funnel' ? 'block' : 'none';
   document.getElementById('rec-panel-analytics').style.display = name === 'analytics' ? 'block' : 'none';
-  if (name === 'vac') renderVacConstructor();
   if (name === 'funnel') renderFunnel();
   if (name === 'analytics') renderAnalytics();
 }
@@ -1034,25 +1068,6 @@ function renderAdminTable() {
       </tr>`;
     })
     .join('');
-}
-
-function renderVacConstructor() {
-  const box = document.getElementById('rec-vac-cards');
-  box.innerHTML = '';
-  const all = [
-    ...INTERN.map((i) => ({ ...i, catLabel: 'Стажировка' })),
-    ...VACANCIES.map((i) => ({ ...i, catLabel: 'Вакансия' })),
-  ];
-  all.forEach((i) => {
-    const card = document.createElement('div');
-    card.className = 'stat-card';
-    card.style.borderRadius = '24px';
-    card.style.padding = '22px';
-    card.innerHTML = `<span style="font-size:10px;font-weight:900;color:var(--x5);background:#f0fdf4;padding:4px 10px;border-radius:100px;">АКТИВНА</span>
-      <h4 class="font-black mt-4 text-lg">${escapeHtml(i.pill || i.title)}</h4>
-      <p class="text-xs text-gray-500 mt-1">${escapeHtml(i.catLabel)} · ${escapeHtml(i.tag)}</p>`;
-    box.appendChild(card);
-  });
 }
 
 function renderFunnel() {

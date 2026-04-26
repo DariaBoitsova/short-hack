@@ -1,44 +1,66 @@
 /**
- * Простое файловое хранилище кандидатов для демо и связки с админкой.
- * В продакшене замените на БД.
+ * SQLite-хранилище кандидатов (для демо и связки с админкой).
+ * Таблица: candidates(vkUserId, sessionId) UNIQUE, recordJson.
  */
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_FILE = path.join(__dirname, '..', 'data', 'candidates.json');
-
-function ensureFile() {
-  const dir = path.dirname(DATA_FILE);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-  if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]', 'utf8');
-}
+import { getDb } from './db.js';
 
 /** @returns {Array<object>} */
 export function readCandidates() {
-  ensureFile();
-  try {
-    return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-  } catch {
-    return [];
-  }
-}
-
-/** @param {Array<object>} list */
-export function writeCandidates(list) {
-  ensureFile();
-  fs.writeFileSync(DATA_FILE, JSON.stringify(list, null, 2), 'utf8');
+  const db = getDb();
+  const rows = db
+    .prepare(
+      `SELECT recordJson
+       FROM candidates
+       ORDER BY datetime(updatedAt) DESC, id DESC`
+    )
+    .all();
+  return rows
+    .map((r) => {
+      try {
+        return JSON.parse(r.recordJson);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
 }
 
 /** Добавить или обновить кандидата по vkUserId + sessionId */
 export function upsertCandidate(record) {
-  const list = readCandidates();
-  const idx = list.findIndex(
-    (c) => c.vkUserId === record.vkUserId && c.sessionId === record.sessionId
-  );
-  if (idx >= 0) list[idx] = { ...list[idx], ...record, updatedAt: new Date().toISOString() };
-  else list.push({ ...record, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-  writeCandidates(list);
-  return list;
+  const db = getDb();
+  const now = new Date().toISOString();
+  const vkUserId = Number(record.vkUserId) || 0;
+  const sessionId = String(record.sessionId || '');
+  const existing = db
+    .prepare(`SELECT recordJson, createdAt FROM candidates WHERE vkUserId = ? AND sessionId = ?`)
+    .get(vkUserId, sessionId);
+
+  const createdAt = existing?.createdAt || record.createdAt || now;
+  const merged = existing
+    ? { ...safeJson(existing.recordJson), ...record, createdAt, updatedAt: now }
+    : { ...record, createdAt, updatedAt: now };
+
+  db.prepare(
+    `INSERT INTO candidates (vkUserId, sessionId, recordJson, createdAt, updatedAt)
+     VALUES (@vkUserId, @sessionId, @recordJson, @createdAt, @updatedAt)
+     ON CONFLICT(vkUserId, sessionId) DO UPDATE SET
+       recordJson = excluded.recordJson,
+       updatedAt = excluded.updatedAt`
+  ).run({
+    vkUserId,
+    sessionId,
+    recordJson: JSON.stringify(merged),
+    createdAt,
+    updatedAt: now,
+  });
+
+  return readCandidates();
+}
+
+function safeJson(s) {
+  try {
+    return JSON.parse(String(s || '{}'));
+  } catch {
+    return {};
+  }
 }

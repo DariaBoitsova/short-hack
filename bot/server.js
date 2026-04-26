@@ -33,7 +33,7 @@ app.get('/api/health', (_, res) => {
 
 /** Сохранение анкеты с лендинга перед переходом в VK */
 app.post('/api/intent', (req, res) => {
-  const { intentId, fio, phone, vacancyId, vacancyTitle, category, skillsNote } = req.body || {};
+  const { intentId, fio, phone, vacancyId, vacancyTitle, category, skillsNote, github } = req.body || {};
   if (!intentId || !vacancyId) return res.status(400).json({ error: 'intentId и vacancyId обязательны' });
   saveIntent({
     intentId,
@@ -43,6 +43,7 @@ app.post('/api/intent', (req, res) => {
     vacancyTitle: vacancyTitle || '',
     category: category || '',
     skillsNote: String(skillsNote || '').slice(0, 4000),
+    github: String(github || '').slice(0, 400),
   });
   res.json({ ok: true });
 });
@@ -54,7 +55,20 @@ app.listen(PORT, () => {
 if (!VK_TOKEN || !VK_GROUP_ID) {
   console.warn('VK_GROUP_TOKEN или VK_GROUP_ID не заданы — работает только статика/API.');
 } else {
-  const vk = new VK({ token: VK_TOKEN, apiVersion: '5.131' });
+  const pollingGroupId = Number(String(VK_GROUP_ID).replace(/\D/g, '')) || undefined;
+  if (!pollingGroupId) {
+    console.warn('VK_GROUP_ID задан, но не удалось извлечь числовой id группы — Long Poll не запустится.');
+  }
+  // vk-io по умолчанию ходит в https://api.vk.ru/method, но в некоторых окружениях
+  // этот домен не резолвится. Используем совместимый https://api.vk.com/method.
+  // Также явно задаём pollingGroupId, чтобы vk-io не делал auto-detect через groups.getById({}),
+  // который в некоторых окружениях возвращает undefined вместо ошибки.
+  const vk = new VK({
+    token: VK_TOKEN,
+    apiVersion: '5.131',
+    apiBaseUrl: 'https://api.vk.com/method',
+    pollingGroupId,
+  });
 
   /** Пользователь разрешил сообщения сообществу — приветствие (снимает «молчание» после подписки). */
   vk.updates.on('message_allow', async (ctx) => {

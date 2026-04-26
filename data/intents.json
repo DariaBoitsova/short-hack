@@ -16,5 +16,85 @@
     "vacancyTitle": "CIB (стажировка)",
     "category": "internship",
     "savedAt": "2026-04-26T11:22:53.246Z"
+  },
+  "b368de54-9404-4d87-89d1-ae59a3763973": {
+    "intentId": "b368de54-9404-4d87-89d1-ae59a3763973",
+    "fio": "Мягкова Мраия ИОУ",
+    "phone": "79161062732",
+    "vacancyId": "vac_director",
+    "vacancyTitle": "Директор магазина",
+    "category": "vacancy",
+    "skillsNote": "щцр12421412412",
+    "savedAt": "2026-04-26T12:27:10.056Z"
+  },
+  "21bd4e74-23e6-4829-8d04-2af79c2bd89e": {
+    "intentId": "21bd4e74-23e6-4829-8d04-2af79c2bd89e",
+    "fio": "оаошйц йщшрцшйц цйккцй",
+    "phone": "7945758983",
+    "vacancyId": "vac_python",
+    "vacancyTitle": "Python-dev",
+    "category": "vacancy",
+    "skillsNote": "йкдшршпщ4р3щпй",
+    "savedAt": "2026-04-26T12:28:25.009Z"
+  },
+  "6aedcda9-d38a-4c8d-a690-1ed9b741429a": {
+    "intentId": "6aedcda9-d38a-4c8d-a690-1ed9b741429a",
+    "fio": "qwuigq. qua idi",
+    "phone": "7935473275",
+    "vacancyId": "intern_analytics",
+    "vacancyTitle": "Аналитика (стажировка)",
+    "category": "internship",
+    "skillsNote": "qwertyuiop;",
+    "savedAt": "2026-04-26T12:32:11.854Z"
+  },
+  "c7f59486-fd0a-4e55-a251-d868d2c8b620": {
+    "intentId": "c7f59486-fd0a-4e55-a251-d868d2c8b620",
+    "fio": ";ojwd iqhj coq",
+    "phone": "798754544444",
+    "vacancyId": "intern_analytics",
+    "vacancyTitle": "Аналитика (стажировка)",
+    "category": "internship",
+    "skillsNote": "asdfghjkjhgfds",
+    "savedAt": "2026-04-26T12:38:49.624Z"
+  },
+  "7300a242-6890-4e67-9be2-7a6b08278ea6": {
+    "intentId": "7300a242-6890-4e67-9be2-7a6b08278ea6",
+    "fio": "рп. р н8п",
+    "phone": "1234567890-",
+    "vacancyId": "intern_ds",
+    "vacancyTitle": "Data Science (стажировка)",
+    "category": "internship",
+    "skillsNote": "цукенгшщдлорпа",
+    "savedAt": "2026-04-26T12:41:46.970Z"
+  },
+  "3d1e21f7-4044-47ed-a18f-d269f8b06466": {
+    "intentId": "3d1e21f7-4044-47ed-a18f-d269f8b06466",
+    "fio": "цук. у у у",
+    "phone": "йуцккеун567767890-9876",
+    "vacancyId": "intern_ds",
+    "vacancyTitle": "Data Science (стажировка)",
+    "category": "internship",
+    "skillsNote": "уцкенеонпаимсвыавпаримс",
+    "savedAt": "2026-04-26T12:50:13.606Z"
+  },
+  "d73d6deb-a501-41dc-b8b2-8d2f8349431f": {
+    "intentId": "d73d6deb-a501-41dc-b8b2-8d2f8349431f",
+    "fio": "йоу уц у ц",
+    "phone": "123456789098765",
+    "vacancyId": "intern_ds",
+    "vacancyTitle": "Data Science (стажировка)",
+    "category": "internship",
+    "skillsNote": "1234567890-098765432",
+    "savedAt": "2026-04-26T12:53:17.679Z"
+  },
+  "12de26bd-0cd0-48d5-a218-2bffe9247351": {
+    "intentId": "12de26bd-0cd0-48d5-a218-2bffe9247351",
+    "fio": "DWQF EWG W E",
+    "phone": "123456789876543",
+    "vacancyId": "intern_analytics",
+    "vacancyTitle": "Аналитика (стажировка)",
+    "category": "internship",
+    "skillsNote": "EWRERGHDGDDSFG",
+    "savedAt": "2026-04-26T12:58:33.718Z"
   }
 }

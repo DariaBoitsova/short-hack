@@ -13,7 +13,7 @@ import {
 } from './vacancies.js';
 import { analyzeSoftSkillsAnswer, evaluateSkillFit } from './gigachat.js';
 import { upsertCandidate } from './storage.js';
-import { getIntent } from './intent-storage.js';
+import { getIntent, saveIntent } from './intent-storage.js';
 
 /** @type {Map<number, object>} */
 const sessions = new Map();
@@ -115,12 +115,45 @@ export async function handleIncomingMessage(vk, message) {
 
   if (refIntentId) session.intentId = refIntentId;
 
+  // Если ранее попросили исправить GitHub — принимаем ссылку и сохраняем в intent
+  if (session.githubFixRequested && session.intentId) {
+    const maybe = extractGithubUrl(text);
+    if (maybe) {
+      const intent = getIntent(session.intentId) || { intentId: session.intentId };
+      saveIntent({ ...intent, intentId: session.intentId, github: maybe });
+      session.githubFixRequested = false;
+      await vk.sendMessage(peerId, `Спасибо! GitHub-ссылка сохранена: ${maybe}`);
+      // продолжаем обработку дальше (не return), чтобы диалог не ломался
+    }
+  }
+
   // Старт: ref с лендинга → сразу направление
   if (session.stage === 'PICK' && refVacancyId && !session.vacancyId) {
     session.vacancyId = refVacancyId;
     session.stage = 'HARD';
     session.hardIndex = 0;
     session.hardCorrect = 0;
+
+    // Проверка GitHub из анкеты (если указан) — если ссылка битая/не открывается, попросим прислать корректную в чат
+    if (session.intentId) {
+      try {
+        const intent = getIntent(session.intentId);
+        const gh = intent?.github;
+        if (gh) {
+          const ok = await canOpenUrl(gh);
+          if (!ok) {
+            session.githubFixRequested = true;
+            await vk.sendMessage(
+              peerId,
+              'В анкете была GitHub-ссылка, но у меня возникли проблемы — не смог открыть её.\nПожалуйста, пришлите корректную ссылку на GitHub одним сообщением (например https://github.com/username).'
+            );
+          }
+        }
+      } catch (e) {
+        console.error('github check', e);
+      }
+    }
+
     await vk.sendMessage(
       peerId,
       `Привет! Вижу отклик на «${VACANCIES[refVacancyId].title}». Начнём короткую викторину (5 вопросов), затем мини-кейс для ИИ-анализа.`
@@ -155,33 +188,77 @@ export async function handleIncomingMessage(vk, message) {
       await vk.sendMessage(peerId, 'Пожалуйста, развёрнутее (хотя бы пара предложений).');
       return;
     }
-    await vk.sendMessage(peerId, 'Анализирую ответ в GigaChat и сверяю навыки с вакансией…');
+    await vk.sendMessage(peerId, 'Сохраняю результат и анализирую ответ…');
+    let ai = null;
     try {
-      const ai = await analyzeSoftSkillsAnswer(answer, VACANCIES[session.vacancyId].title);
-      session.soft = { ...ai, userAnswer: answer.slice(0, 2000) };
-      session.stage = 'DONE';
-      const politeLabel = ai.toxic || !ai.polite ? 'Токсичность/риск' : 'Вежливый тон';
-      const saved = await persistSession(session);
-      const gateLine = saved.skillGatePassed
-        ? `Соответствие навыков (ИИ): ${saved.skillFitScore}/100 — в топе.`
-        : `Соответствие навыков (ИИ): ${saved.skillFitScore}/100 — не хватает: ${(saved.skillMissing || []).join('; ') || saved.skillFitReason}. В рейтинге топа не участвуете до доп. проверки HR.`;
-      await vk.sendMessage(
-        peerId,
-        `Спасибо! Итог:\nHard: ${session.hardCorrect}/5 (0–100: ${saved.hard100})\nSoft (ИИ): ${ai.score}/10 (0–100: ${saved.soft100})\nМотивация: ${saved.motiv100}\nИтог взвешенный: ${saved.weightedScore}/100\n${gateLine}\n${politeLabel}\nРезюме ИИ: ${ai.summary}\n\nДанные переданы рекрутёру.`
-      );
+      ai = await analyzeSoftSkillsAnswer(answer, VACANCIES[session.vacancyId].title);
     } catch (e) {
-      console.error(e);
-      await vk.sendMessage(
-        peerId,
-        'Не удалось вызвать GigaChat. Проверьте GIGACHAT_AUTH_KEY и сеть. Попробуйте позже или напишите ещё раз ответом текстом.'
-      );
+      // Даже если ИИ недоступен, результат должен попасть в админку.
+      console.error('analyzeSoftSkillsAnswer', e);
+      ai = {
+        score: 5,
+        summary: 'ИИ временно недоступен — требуется ручная проверка.',
+        polite: true,
+        toxic: false,
+      };
     }
+
+    session.soft = { ...ai, userAnswer: answer.slice(0, 2000) };
+    session.stage = 'DONE';
+    const politeLabel = ai.toxic || !ai.polite ? 'Токсичность/риск' : 'Вежливый тон';
+
+    let saved;
+    try {
+      saved = await persistSession(session);
+    } catch (e) {
+      console.error('persistSession', e);
+      await vk.sendMessage(peerId, 'Не удалось сохранить результат в админку. Попробуйте позже или напишите /start.');
+      return;
+    }
+
+    const gateLine = saved.skillGatePassed
+      ? `Соответствие навыков (ИИ): ${saved.skillFitScore}/100 — в топе.`
+      : `Соответствие навыков (ИИ): ${saved.skillFitScore}/100 — не хватает: ${(saved.skillMissing || []).join('; ') || saved.skillFitReason}. В рейтинге топа не участвуете до доп. проверки HR.`;
+
+    await vk.sendMessage(
+      peerId,
+      `Спасибо! Итог:\nHard: ${session.hardCorrect}/5 (0–100: ${saved.hard100})\nSoft (ИИ): ${ai.score}/10 (0–100: ${saved.soft100})\nМотивация: ${saved.motiv100}\nИтог взвешенный: ${saved.weightedScore}/100\n${gateLine}\n${politeLabel}\nРезюме ИИ: ${ai.summary}\n\nДанные переданы рекрутёру.`
+    );
     return;
   }
 
   if (session.stage === 'DONE') {
     await vk.sendMessage(peerId, 'Вы уже завершили анкету. Новый отклик — напишите /start');
     return;
+  }
+}
+
+function extractGithubUrl(text) {
+  const s = String(text || '').trim();
+  if (!s) return '';
+  // принимаем и "github.com/user" и "https://github.com/user"
+  const m = s.match(/(https?:\/\/)?(www\.)?github\.com\/[A-Za-z0-9_.-]+(\/)?/i);
+  if (!m) return '';
+  const url = m[0].startsWith('http') ? m[0] : 'https://' + m[0];
+  return url.replace(/\/+$/, '');
+}
+
+async function canOpenUrl(url) {
+  const u = String(url || '').trim();
+  if (!u) return false;
+  if (!/^https?:\/\//i.test(u)) return false;
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 7000);
+  try {
+    const r = await fetch(u, { method: 'HEAD', redirect: 'follow', signal: controller.signal });
+    if (r && r.ok) return true;
+    // некоторые хосты режут HEAD — пробуем GET
+    const r2 = await fetch(u, { method: 'GET', redirect: 'follow', signal: controller.signal });
+    return !!(r2 && r2.ok);
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(t);
   }
 }
 
