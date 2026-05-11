@@ -111,6 +111,14 @@ $$\text{weightedScore} = \min(\text{weightedScore}, \text{round}(35 + \text{fitS
 * **[Мягкова Мария]** - [Full-Stack Developer, Pitcher]
 
 # Скрины работы
+![](image_8.jpeg)
+![](image_7.jpeg)
+![](image_6.jpeg)
+![](image_5.jpeg)
+![](image_4.jpeg)
+![](image_3.jpeg)
+![](image_2.jpeg)
+![](image_1.jpeg)
 ![скрин бота_1](screen1.jpg)
 ![скрин бота_2](screen2.jpg)
 ![скрин бота_3](screen3.jpg)
